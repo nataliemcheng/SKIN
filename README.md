@@ -11,5 +11,4 @@ SK!N is a mobile app to stay informed on skincare and makeup products.
 
 [Project Proposal Presentation](https://docs.google.com/presentation/d/1HA-hRuZMcxMNO_6pZSeGNoWvcBMl8vDhSBcoBMVreTY/edit?usp=sharing)
 
-[One-page Proposal](INSERT LINK HERE)
 
