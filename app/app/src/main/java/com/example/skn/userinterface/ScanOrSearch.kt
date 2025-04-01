@@ -115,11 +115,19 @@ fun ScanOrSearchScreen(
             }
 
             else -> {
+                val harmfulIngredients = listOf("parabens", "paraben", "phthalates", "sulfates", "formaldehyde", "triclosan",
+                    "fragrance", "alcohol", "silicones", "oxybenzone", "toluene", "PFAS", "dye")
+                val beneficialIngredients = listOf("hyaluronic acid", "niacinamide", "vitamin C", "vitamin E", "vitamin A",
+                    "retinol", "glycolic acid", "salicylic acid", "ceramides", "peptides", "AHA", "BHA", "vegan", "free from")
+
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxHeight()
                 ) {
                     items(products) { product ->
+                        val tags = product.tag_list?.map { it.lowercase() } ?: emptyList()
+                        val description = product.description?.map { it.lowercase() } ?: emptyList()
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -135,12 +143,21 @@ fun ScanOrSearchScreen(
                             )
                             Column {
                                 Text(product.name ?: "Unnamed Product", style = MaterialTheme.typography.titleMedium)
+
+                                val containsHarmful = tags.any { it in harmfulIngredients.map { h -> h.lowercase() } } || description.any { it in harmfulIngredients.map { h -> h.lowercase() } }
+                                val containsBeneficial = tags.any { it in beneficialIngredients.map { b -> b.lowercase() } } || description.any { it in beneficialIngredients.map { b -> b.lowercase() } }
+
                                 Text(
-                                    text = if ((product.tag_list ?: emptyList()).contains("Vegan"))
-                                        "This product is beneficial 🌿"
-                                    else
-                                        "This product might be harmful ❌",
-                                    color = if ((product.tag_list ?: emptyList()).contains("Vegan")) Color.Green else Color.Red
+                                    text = when {
+                                        containsHarmful -> "This product might be harmful ❌"
+                                        containsBeneficial -> "This product is beneficial 🌿"
+                                        else -> "This product is neutral"
+                                    },
+                                    color = when {
+                                        containsHarmful -> Color.Red
+                                        containsBeneficial -> Color.Green
+                                        else -> Color.Blue
+                                    }
                                 )
                                 Text(product.description ?: "No description available")
                             }

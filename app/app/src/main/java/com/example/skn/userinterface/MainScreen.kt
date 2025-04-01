@@ -35,7 +35,8 @@ fun MainScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -54,8 +55,6 @@ fun MainScreen(
             }
         }
 
-        Spacer(Modifier.height(20.dp))
-
         if (loading) {
             CircularProgressIndicator()
         } else if (error != null) {
@@ -68,10 +67,11 @@ fun MainScreen(
 
         // Placeholder tutorial list
         val tutorials = listOf("Dry Skin @user1", "Acne @user2", "Oily Skin @user3")
-        Text("Discover Tutorials", style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(8.dp))
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(tutorials) { item -> TutorialCard(item) }
+        Column {
+            Text("Discover Tutorials", style = MaterialTheme.typography.titleMedium)
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxHeight()) {
+                items(tutorials) { item -> TutorialCard(item) }
+        }
         }
     }
 }

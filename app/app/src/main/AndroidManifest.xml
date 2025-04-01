@@ -8,6 +8,9 @@
     <!-- ✅ Required if using HTTP (not HTTPS) -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
