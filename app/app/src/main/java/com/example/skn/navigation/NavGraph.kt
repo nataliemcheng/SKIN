@@ -8,29 +8,73 @@ import androidx.navigation.compose.composable
 import com.example.skn.userinterface.MainScreen
 import com.example.skn.userinterface.ScanOrSearchScreen
 import com.example.skn.userinterface.BarcodeScannerScreen
+import com.example.skn.userinterface.LoginScreen
+import com.example.skn.userinterface.SignUpScreen
+import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.viewmodel.ProductViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
-    viewModel: ProductViewModel,
+    productViewModel: ProductViewModel,
+    authViewModel: AuthViewModel,
     modifier: Modifier = Modifier
 ) {
+    val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
+    val startDestination = if (isLoggedIn) "main" else "login"
+
     NavHost(
         navController = navController,
-        startDestination = "main",
+        startDestination = startDestination,
         modifier = modifier
     ) {
+        composable("login") {
+            LoginScreen(
+                authViewModel = authViewModel,
+                navController = navController,
+                onLoginSuccess = { navController.navigate("main") {
+                    popUpTo("login") { inclusive = true }
+                    launchSingleTop = true
+                }}
+            )
+        }
+        composable("signup") {
+            SignUpScreen(
+                authViewModel = authViewModel,
+                onSignUpSuccess = {
+                    navController.navigate("main") {
+                        popUpTo("signup") { inclusive = true }
+                        launchSingleTop = true
+
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.navigate("login") {
+                        popUpTo("signup") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
         composable("main") {
             MainScreen(
-                viewModel = viewModel,
+                viewModel = productViewModel,
+                authViewModel = authViewModel,
                 onSearchClick = { navController.navigate("search") },
-                onCreatePostClick = { /* TODO: navigate to post */ }
+                onCreatePostClick = { /* your logic */ },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("main") { inclusive = true }  // so user can't go back
+                        launchSingleTop = true
+
+                    }
+                }
             )
         }
         composable("search") {
             ScanOrSearchScreen(
-                viewModel = viewModel,
+                viewModel = productViewModel,
                 onBackClick = { navController.popBackStack() },
                 onCreatePostClick = { /* TODO: navigate to post */ },
                 onScanClick = { navController.navigate("barcodeScanner") }

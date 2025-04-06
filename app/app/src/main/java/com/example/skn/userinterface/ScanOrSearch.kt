@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -120,19 +122,29 @@ fun ScanOrSearchScreen(
                 val beneficialIngredients = listOf("hyaluronic acid", "niacinamide", "vitamin C", "vitamin E", "vitamin A",
                     "retinol", "glycolic acid", "salicylic acid", "ceramides", "peptides", "AHA", "BHA", "vegan", "free from")
 
+
+                val favoriteProducts by viewModel.favoriteProducts.collectAsState()
+
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxHeight()
                 ) {
                     items(products) { product ->
                         val tags = product.tag_list?.map { it.lowercase() } ?: emptyList()
-                        val description = product.description?.map { it.lowercase() } ?: emptyList()
+                        val description = product.description?.lowercase() ?: ""
+
+                        val containsHarmful = tags.any { it in harmfulIngredients.map { h -> h.lowercase() } } ||
+                                harmfulIngredients.any { it in description }
+
+                        val containsBeneficial = tags.any { it in beneficialIngredients.map { b -> b.lowercase() } } ||
+                                beneficialIngredients.any { it in description }
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Image(
                                 painter = rememberAsyncImagePainter(product.image_link),
@@ -141,11 +153,9 @@ fun ScanOrSearchScreen(
                                     .size(100.dp)
                                     .border(1.dp, Color.LightGray)
                             )
-                            Column {
-                                Text(product.name ?: "Unnamed Product", style = MaterialTheme.typography.titleMedium)
 
-                                val containsHarmful = tags.any { it in harmfulIngredients.map { h -> h.lowercase() } } || description.any { it in harmfulIngredients.map { h -> h.lowercase() } }
-                                val containsBeneficial = tags.any { it in beneficialIngredients.map { b -> b.lowercase() } } || description.any { it in beneficialIngredients.map { b -> b.lowercase() } }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(product.name ?: "Unnamed Product", style = MaterialTheme.typography.titleMedium)
 
                                 Text(
                                     text = when {
@@ -159,9 +169,20 @@ fun ScanOrSearchScreen(
                                         else -> Color.Blue
                                     }
                                 )
+
                                 Text(product.description ?: "No description available")
                             }
+
+                            IconButton(onClick = { viewModel.toggleFavorite(product) }) {
+                                val isFavorited = favoriteProducts.contains(product)
+                                Icon(
+                                    imageVector = if (isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = if (isFavorited) "Unfavorite" else "Favorite",
+                                    tint = if (isFavorited) Color.Red else Color.Gray
+                                )
+                            }
                         }
+
                         HorizontalDivider()
                     }
                 }
