@@ -10,8 +10,10 @@ import com.example.skn.userinterface.ScanOrSearchScreen
 import com.example.skn.userinterface.BarcodeScannerScreen
 import com.example.skn.userinterface.LoginScreen
 import com.example.skn.userinterface.SignUpScreen
+import com.example.skn.userinterface.UserProfileScreen
 import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.viewmodel.ProductViewModel
+import com.example.skn.viewmodel.UserProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -19,6 +21,7 @@ fun AppNavGraph(
     navController: NavHostController,
     productViewModel: ProductViewModel,
     authViewModel: AuthViewModel,
+    userProfileViewModel: UserProfileViewModel,
     modifier: Modifier = Modifier
 ) {
     val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
@@ -67,9 +70,9 @@ fun AppNavGraph(
                     navController.navigate("login") {
                         popUpTo("main") { inclusive = true }  // so user can't go back
                         launchSingleTop = true
-
                     }
-                }
+                },
+                onProfileClick = { navController.navigate("profile") }
             )
         }
         composable("search") {
@@ -82,6 +85,15 @@ fun AppNavGraph(
         }
         composable("barcodeScanner") {
             BarcodeScannerScreen()
+        }
+
+        composable("profile") {
+            UserProfileScreen(
+                authViewModel = authViewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onLogout = { navController.navigate("login") },
+                profileViewModel = userProfileViewModel
+            )
         }
 
     }

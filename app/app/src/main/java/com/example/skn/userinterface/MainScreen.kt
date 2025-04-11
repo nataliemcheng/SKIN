@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -27,7 +28,8 @@ fun MainScreen(
     authViewModel: AuthViewModel,
     onSearchClick: () -> Unit,
     onCreatePostClick: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
     val products by viewModel.products.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
@@ -42,19 +44,36 @@ fun MainScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+//        Navigation
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            // Scan or Search
             Button(onClick = onSearchClick) {
                 Icon(Icons.Default.Search, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("Scan or Search")
             }
+            // Create Post
             Button(onClick = onCreatePostClick) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("Create Post")
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // User Profile
+            Button(onClick = onProfileClick) {
+                Icon(Icons.Default.AccountCircle, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Your Profile")
             }
             DropdownMenuButton(onLogout = {
                 authViewModel.logout()
