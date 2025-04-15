@@ -33,6 +33,9 @@ fun MainScreen(
     onLogout: () -> Unit,
     onProfileClick: () -> Unit
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.fetchAllProducts()
+    }
     val products by viewModel.products.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
