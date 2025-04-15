@@ -91,7 +91,7 @@ fun UserProfileScreen(
                 profile = profile,
                 isEditing = isEditingProfile,
                 isChangingPassword = isChangingPassword,
-                email = ,
+                email =  "",
                 firstName = firstName,
                 lastName = lastName,
                 skinType = skinType,
