@@ -1,6 +1,5 @@
 package com.example.skn.viewmodel
 
-
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseUser
@@ -9,8 +8,9 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.example.skn.api.UserProfile
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(private val userProfileViewModel: UserProfileViewModel) : ViewModel() {
 
     private val auth = Firebase.auth
 
@@ -33,6 +33,17 @@ class AuthViewModel : ViewModel() {
                     if (uid != null) {
                         Log.d("Auth", "✅ Registered: $uid")
                         onResult(true, uid) // success
+                        // After success, initialize the user profile
+                        userProfileViewModel.saveUserProfile(
+                            UserProfile(
+                                uid = uid,
+                                email = email,
+                                firstName = "",
+                                lastName = "",
+                                skinType = "",
+                                skinConcerns = listOf()
+                            )
+                        )
                     } else {
                         Log.e("Auth", "❌ UID is null after registration")
                         onResult(false, "User ID is null")

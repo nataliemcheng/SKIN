@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skn.api.UserProfile
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.flow.update
 
 class UserProfileViewModel : ViewModel()  {
     private val auth = Firebase.auth
@@ -30,44 +32,50 @@ class UserProfileViewModel : ViewModel()  {
 
     init {
         // Load user profile when ViewModel is created if a user is logged in
-        auth.currentUser?.let { user ->
-            fetchUser(user.uid)
-        }
+        // TODO: probably add error checking here
+        auth.currentUser?.uid?.let{ fetchUser(it) }
     }
 
     // CRUD USER
-    fun fetchUser(userId: String? = null) {
-        val uid = userId?: auth.currentUser?.uid
-        if (uid == null) {
-            _error.value = "No user is currently logged in"
-            return
-        }
-
+    // Fetch user profile
+    fun fetchUser(userId: String) {
         viewModelScope.launch {
             try {
                 _loading.value = true
                 _error.value = null
 
-                val docRef = firestore.collection("users").document(uid)
+                val docRef = firestore.collection("user_profile").document(userId)
                 val document = docRef.get().await()
 
                 if (document.exists()) {
-                    // Convert document to UserProfile
-                    val profile = document.toObject(UserProfile::class.java)?: UserProfile(uid = uid)
+                    // Create profile document
+                    val profile = document.toObject(UserProfile::class.java) ?: UserProfile(uid = userId)
                     _userProfile.value = profile
-
                 } else {
-                    // Create a new user profile if DNE
-                    val newProfile = UserProfile(uid = uid)
+                    // Create a new profile with default fields if not found
+                    val newProfile = UserProfile(uid = userId)
                     _userProfile.value = newProfile
                     saveUserProfile(newProfile)
                 }
             } catch (e: Exception) {
                 Log.e("UserProfile:", "Error fetching user profile", e)
                 _error.value = "${e.localizedMessage}"
-            }finally {
+            } finally {
                 _loading.value = false
             }
+        }
+    }
+
+    // maybe take out
+    fun setUser(user: FirebaseUser) {
+        fetchUser(user.uid) // Load profile from Firestore
+        _userProfile.update { current ->
+            current?.copy(email = user.email ?: "") ?: UserProfile(
+                uid = user.uid,
+                email = user.email ?: "",
+                firstName = "",
+                lastName = ""
+            )
         }
     }
 
@@ -87,7 +95,7 @@ class UserProfileViewModel : ViewModel()  {
                 val updatedProfile = profile.copy(uid=uid)
 
                 // Save to DB
-                firestore.collection("users").document(uid).set(updatedProfile).await()
+                firestore.collection("user_profile").document(uid).set(updatedProfile).await()
 
                 _userProfile.value = updatedProfile
                 Log.d("UserProfile:","User Profile saved successfully")
@@ -101,7 +109,6 @@ class UserProfileViewModel : ViewModel()  {
     }
 
     fun updateProfile(
-        email: String? = null,
         firstName: String? = null,
         lastName: String? = null,
         skinType: String? = null,
@@ -110,7 +117,6 @@ class UserProfileViewModel : ViewModel()  {
         val currentProfile = _userProfile.value ?: return
 
         val updatedProfile = currentProfile.copy(
-            email = email ?: currentProfile.email,
             firstName = firstName ?: currentProfile.firstName,
             lastName = lastName ?: currentProfile.lastName,
             skinType = skinType ?: currentProfile.skinType,
@@ -121,6 +127,7 @@ class UserProfileViewModel : ViewModel()  {
     }
 
     // Delete user profile
+    // TODO: create UI for this
     fun deleteUserProfile(onComplete: (Boolean, String?) -> Unit) {
         val uid = auth.currentUser?.uid
         if (uid == null) {
@@ -128,7 +135,7 @@ class UserProfileViewModel : ViewModel()  {
             return
         }
 
-        firestore.collection("users").document(uid)
+        firestore.collection("user_profile").document(uid)
             .delete()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {

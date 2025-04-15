@@ -48,8 +48,8 @@ fun UserProfileScreen(
 
     // Get profile on launch
     LaunchedEffect(currentUser) {
-        currentUser?.uid?.let { userId ->
-            profileViewModel.fetchUser(userId)
+        currentUser?.let {
+            profileViewModel.setUser(it)
         }
     }
 
@@ -91,6 +91,7 @@ fun UserProfileScreen(
                 profile = profile,
                 isEditing = isEditingProfile,
                 isChangingPassword = isChangingPassword,
+                email = ,
                 firstName = firstName,
                 lastName = lastName,
                 skinType = skinType,
@@ -193,6 +194,7 @@ fun UserProfileCard(
     profile: UserProfile?,
     isEditing: Boolean,
     isChangingPassword: Boolean,
+    email: String,
     firstName: String,
     lastName: String,
     skinType: String,
@@ -229,7 +231,7 @@ fun UserProfileCard(
             Spacer(Modifier.height(8.dp))
 
             // Show email
-            Text("Email: ${profile?.email ?: "Email not available"}", style = MaterialTheme.typography.bodyMedium)
+            Text("Email: ${email}", style = MaterialTheme.typography.bodyMedium)
 
             Spacer(Modifier.height(16.dp))
 
