@@ -55,7 +55,7 @@ fun MainScreen(
     ) {
 //        Navigation
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(top = 30.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             // Scan or Search
