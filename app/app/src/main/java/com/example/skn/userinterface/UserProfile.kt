@@ -30,6 +30,9 @@ fun UserProfileScreen(
     val loading by profileViewModel.loading.collectAsStateWithLifecycle()
     val error by profileViewModel.error.collectAsStateWithLifecycle()
 
+    // 📧 Extract email from current user (used for display in profile card)
+    val email = currentUser?.email ?: ""
+
     // Local UI state
     var isEditingProfile by remember { mutableStateOf(false) }
     var isChangingPassword by remember { mutableStateOf(false) }
@@ -39,6 +42,7 @@ fun UserProfileScreen(
     var passwordError by remember { mutableStateOf<String?>(null) }
     var passwordSuccess by remember { mutableStateOf<String?>(null) }
     var isPasswordLoading by remember { mutableStateOf(false) }
+
 
     // Editable profile fields
     var firstName by remember { mutableStateOf("") }
@@ -91,7 +95,7 @@ fun UserProfileScreen(
                 profile = profile,
                 isEditing = isEditingProfile,
                 isChangingPassword = isChangingPassword,
-                email =  "",
+                email =  email,
                 firstName = firstName,
                 lastName = lastName,
                 skinType = skinType,
