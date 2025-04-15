@@ -1,5 +1,6 @@
 package com.example.skn.userinterface
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import com.example.skn.viewmodel.ProductViewModel
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,6 +40,10 @@ fun MainScreen(
     val favorites by viewModel.favoriteProducts.collectAsStateWithLifecycle()
     val popular = products.filter { it.rating != null && it.rating >= 4.5 }.take(5)
 
+    // checks if its a tablet in landscape
+    val configuration = LocalConfiguration.current
+    val isTablet = configuration.smallestScreenWidthDp >= 600
+    val isTabletLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE && isTablet
 
     Column(
         modifier = Modifier
@@ -93,7 +99,54 @@ fun MainScreen(
                 Text("Error: $error", color = MaterialTheme.colorScheme.error)
             }
             else -> {
-                LazyColumn(
+                if (isTabletLandscape) {
+                    // Two-column layout: Left Column holds Favorites and Recently Searched,
+                    // Right Column holds Popular and Tutorials.
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Left Column
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(40.dp)
+                        ) {
+                            Section(
+                                title = "Favorites",
+                                items = favorites,
+                                isFavoriteSection = true,
+                                onToggleFavorite = { viewModel.toggleFavorite(it) }
+                            )
+                            Section(
+                                title = "Recently Searched",
+                                items = recentlySearched,
+                                onToggleFavorite = { viewModel.toggleFavorite(it) }
+                            )
+                        }
+                        // Right Column
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(40.dp)
+                        ) {
+                            Section(
+                                title = "Popular",
+                                items = popular,
+                                onToggleFavorite = { viewModel.toggleFavorite(it) }
+                            )
+                            Column {
+                                Text("Discover Tutorials", style = MaterialTheme.typography.titleMedium)
+                                Spacer(Modifier.height(8.dp))
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    items(listOf("Dry Skin @user1", "Acne @user2", "Oily Skin @user3")) { item ->
+                                        TutorialCard(text = item)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                    LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(40.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
