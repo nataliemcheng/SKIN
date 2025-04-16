@@ -103,8 +103,8 @@ fun MainScreen(
             }
             else -> {
                 if (isTabletLandscape) {
-                    // Two-column layout: Left Column holds Favorites and Recently Searched,
-                    // Right Column holds Popular and Tutorials.
+                    // Two-column layout: Left Column holds Favorites and Recently Searched
+                    // Right Column
                     Row(
                         modifier = Modifier.fillMaxSize(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)

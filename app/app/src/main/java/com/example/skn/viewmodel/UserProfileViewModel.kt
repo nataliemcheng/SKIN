@@ -32,7 +32,6 @@ class UserProfileViewModel : ViewModel()  {
 
     init {
         // Load user profile when ViewModel is created if a user is logged in
-        // TODO: probably add error checking here
         auth.currentUser?.uid?.let{ fetchUser(it) }
     }
 
@@ -66,7 +65,6 @@ class UserProfileViewModel : ViewModel()  {
         }
     }
 
-    // maybe take out
     fun setUser(user: FirebaseUser) {
         fetchUser(user.uid) // Load profile from Firestore
         _userProfile.update { current ->
@@ -127,7 +125,6 @@ class UserProfileViewModel : ViewModel()  {
     }
 
     // Delete user profile
-    // TODO: create UI for this
     fun deleteUserProfile(onComplete: (Boolean, String?) -> Unit) {
         val uid = auth.currentUser?.uid
         if (uid == null) {
