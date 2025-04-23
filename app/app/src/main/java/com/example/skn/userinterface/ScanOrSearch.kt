@@ -25,7 +25,10 @@ fun ScanOrSearchScreen(
     viewModel: ProductViewModel,
     onBackClick: () -> Unit,
     onCreatePostClick: () -> Unit,
-    onScanClick: () -> Unit
+    onScanClick: () -> Unit,
+    snackbarHostState: SnackbarHostState,
+    scannedBarcode: String?,
+    modifier: Modifier = Modifier // 👈 Add this
 
 ) {
     var brand by remember { mutableStateOf("") }
@@ -35,7 +38,12 @@ fun ScanOrSearchScreen(
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    Column(modifier = Modifier
+    LaunchedEffect(scannedBarcode) {
+        scannedBarcode?.let {
+            snackbarHostState.showSnackbar("Scanned: $it")
+        }
+    }
+    Column(modifier = modifier
         .fillMaxSize()
         .padding(16.dp)) {
 

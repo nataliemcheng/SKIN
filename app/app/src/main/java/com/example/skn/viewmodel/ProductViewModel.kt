@@ -108,7 +108,7 @@ class ProductViewModel : ViewModel() {
 
     private fun removeFavoriteFromFirestore(productId: Int) {
         val db = Firebase.firestore
-        val userId = "debugUser"
+        val userId = getCurrentUserId() ?: return
 
         db.collection("user_activity")
             .document(userId)
@@ -128,10 +128,28 @@ class ProductViewModel : ViewModel() {
         _loading.value = true
         viewModelScope.launch {
             try {
+                val db = Firebase.firestore
                 val response = ApiClient.api.getAllProducts()
                 if (response.isSuccessful) {
-                    _products.value = response.body() ?: emptyList()
+                    val productList = response.body() ?: emptyList()
+                    _products.value = productList
                     _error.value = null
+
+                    // ✅ Save to Firestore under "all_products"
+                    val batch = db.batch()
+                    val collectionRef = db.collection("all_products")
+                    productList.forEach { product ->
+                        val docRef = collectionRef.document(product.id.toString())
+                        batch.set(docRef, product)
+                    }
+                    batch.commit()
+                        .addOnSuccessListener {
+                            Log.d("Firestore", "✅ All products saved to Firestore")
+                        }
+                        .addOnFailureListener {
+                            Log.e("Firestore", "❌ Failed to save products to Firestore", it)
+                        }
+
                 } else {
                     _error.value = "Error: ${response.message()}"
                 }
@@ -209,7 +227,7 @@ class ProductViewModel : ViewModel() {
 
         db.collection("user_activity")
             .document(userId)
-            .collection("test_logs")
+            .collection("search_history")
             .add(data)
             .addOnSuccessListener {
                 Log.d("Firestore", "Logged search for product: ${product.name}")
@@ -263,6 +281,26 @@ class ProductViewModel : ViewModel() {
             }
     }
 
+    fun loadProductsFromFirestore() {
+        _loading.value = true
+        val db = Firebase.firestore
+        db.collection("all_products")
+            .get()
+            .addOnSuccessListener { result ->
+                val productList = result.map { doc ->
+                    doc.toObject(Product::class.java)
+                }
+                _products.value = productList
+                Log.d("Firestore", "✅ Loaded ${productList.size} products from Firestore")
+            }
+            .addOnFailureListener {
+                _error.value = "Failed to load products from Firestore"
+                Log.e("Firestore", "❌ Error loading products", it)
+            }
+            .addOnCompleteListener {
+                _loading.value = false
+            }
+    }
 
 }
 

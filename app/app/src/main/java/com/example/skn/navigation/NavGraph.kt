@@ -1,10 +1,17 @@
 package com.example.skn.navigation
 
+import android.net.Uri
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.skn.userinterface.MainScreen
 import com.example.skn.userinterface.ScanOrSearchScreen
 import com.example.skn.userinterface.BarcodeScannerScreen
@@ -26,6 +33,8 @@ fun AppNavGraph(
 ) {
     val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
     val startDestination = if (isLoggedIn) "main" else "login"
+    val snackbarHostState = remember { SnackbarHostState() }
+
 
     NavHost(
         navController = navController,
@@ -64,7 +73,13 @@ fun AppNavGraph(
             MainScreen(
                 viewModel = productViewModel,
                 authViewModel = authViewModel,
-                onSearchClick = { navController.navigate("search") },
+                onHomeClick = { navController.navigate("main") {
+                    popUpTo("main") { inclusive = true }
+                    launchSingleTop = true
+                            }
+                              },
+                onSearchClick = {navController.navigate("scanOrSearch?barcode=") },
+                onScanClick = { navController.navigate("barcodeScanner") },
                 onCreatePostClick = { /* your logic */ },
                 onLogout = {
                     navController.navigate("login") {
@@ -75,16 +90,38 @@ fun AppNavGraph(
                 onProfileClick = { navController.navigate("profile") }
             )
         }
-        composable("search") {
-            ScanOrSearchScreen(
-                viewModel = productViewModel,
-                onBackClick = { navController.popBackStack() },
-                onCreatePostClick = { /* TODO: navigate to post */ },
-                onScanClick = { navController.navigate("barcodeScanner") }
-            )
+        composable(
+            "scanOrSearch?barcode={barcode}",
+            arguments = listOf(navArgument("barcode") { defaultValue = "" })
+        ) { backStackEntry ->
+            val barcode = backStackEntry.arguments?.getString("barcode")
+
+            Scaffold(
+                snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+            ) { paddingValues -> // 👈 receive paddingValues here
+                ScanOrSearchScreen(
+                    viewModel = productViewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onCreatePostClick = { navController.navigate("post") },
+                    onScanClick = { navController.navigate("barcodeScanner") },
+                    snackbarHostState = snackbarHostState,
+                    scannedBarcode = barcode.takeIf { !it.isNullOrBlank() },
+                    modifier = Modifier.padding(paddingValues) // 👈 pass padding
+                )
+            }
         }
+
         composable("barcodeScanner") {
-            BarcodeScannerScreen()
+            BarcodeScannerScreen(
+                navController = navController,
+                onScanComplete = { result ->
+                    navController.navigate("scanOrSearch?barcode=${Uri.encode(result)}") {
+                        popUpTo("barcodeScanner") { inclusive = true }
+                    }
+                } ,
+                snackbarHostState = snackbarHostState
+
+            )
         }
 
         composable("profile") {
