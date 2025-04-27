@@ -48,7 +48,7 @@ fun UserProfileScreen(
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var skinType by remember { mutableStateOf("") }
-    var skinConcernsText by remember { mutableStateOf("") }
+    var skinConcerns by remember { mutableStateOf<List<String>>(emptyList()) }
 
     // Get profile on launch
     LaunchedEffect(currentUser) {
@@ -63,7 +63,7 @@ fun UserProfileScreen(
             firstName = it.firstName
             lastName = it.lastName
             skinType = it.skinType ?: ""
-            skinConcernsText = it.skinConcerns?.joinToString(", ") ?: ""
+            skinConcerns = it.skinConcerns ?: emptyList()
         }
     }
 
@@ -99,15 +99,14 @@ fun UserProfileScreen(
                 firstName = firstName,
                 lastName = lastName,
                 skinType = skinType,
-                skinConcernsText = skinConcernsText,
+                skinConcerns = skinConcerns,
                 onFirstNameChange = { firstName = it },
                 onLastNameChange = { lastName = it },
                 onSkinTypeChange = { skinType = it },
-                onSkinConcernsTextChange = { skinConcernsText = it },
+                onSkinConcernsChange = { skinConcerns = it },
                 onToggleEdit = { isEditingProfile = !isEditingProfile },
                 onTogglePasswordChange = { isChangingPassword = !isChangingPassword },
                 onSaveProfile = {
-                    val skinConcerns = skinConcernsText.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
                     // call from viewModel
                     profileViewModel.updateProfile(firstName = firstName, lastName = lastName,
@@ -202,11 +201,11 @@ fun UserProfileCard(
     firstName: String,
     lastName: String,
     skinType: String,
-    skinConcernsText: String,
+    skinConcerns: List<String>,
     onFirstNameChange: (String) -> Unit,
     onLastNameChange: (String) -> Unit,
     onSkinTypeChange: (String) -> Unit,
-    onSkinConcernsTextChange: (String) -> Unit,
+    onSkinConcernsChange: (List<String>) -> Unit,
     onToggleEdit: () -> Unit,
     onTogglePasswordChange: () -> Unit,
     onSaveProfile: () -> Unit,
@@ -258,23 +257,27 @@ fun UserProfileCard(
                 )
 
                 Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = skinType,
-                    onValueChange = onSkinTypeChange,
-                    label = { Text("Skin Type") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
+                SkinTypeDropdown(
+                    options = listOf("Dry", "Oily", "Combonation", "Normal","Sensitive"),
+                    selected = skinType,
+                    onSelectionChange = onSkinTypeChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
                 )
 
                 Spacer(Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = skinConcernsText,
-                    onValueChange = onSkinConcernsTextChange,
-                    label = { Text("Skin Concerns (comma separated)") },
-                    modifier = Modifier.fillMaxWidth()
+                MultiSelectSkinConcernDropdown(
+                    options           = listOf("Acne", "Dryness", "Sun Damage", "Hyperpigmentation"),
+                    selected          = skinConcerns,
+                    onSelectionChange = onSkinConcernsChange,
+                    label             = "Skin Concerns",
+                    modifier          = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
                 )
+
 
                 Spacer(Modifier.height(16.dp))
 
@@ -407,6 +410,101 @@ fun PasswordChangeCard(
                         Text("Update Password")
                     }
                 }
+            }
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MultiSelectSkinConcernDropdown(
+    options: List<String>,
+    selected: List<String>,
+    onSelectionChange: (List<String>) -> Unit,
+    label: String = "Skin Concerns",
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = if (selected.isEmpty()) "" else selected.joinToString(", "),
+            onValueChange = { /* read-only */ },
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                val isChecked = option in selected
+                DropdownMenuItem(
+                    onClick = {
+                        val newList = if (isChecked) selected - option else selected + option
+                        onSelectionChange(newList)
+                    },
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = isChecked,
+                                onCheckedChange = null
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(option)
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SkinTypeDropdown(
+    options: List<String>,
+    selected: String,
+    onSelectionChange: (String) -> Unit,
+    label: String = "Skin Type",
+    modifier: Modifier = Modifier
+){
+    var expanded by remember { mutableStateOf(false)}
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = {expanded = !expanded},
+        modifier = modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = selected,
+            onValueChange = {/* read only */},
+            readOnly = true,
+            label = {Text(label)},
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded)},
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false}
+        ) {
+            options.forEach {option ->
+                DropdownMenuItem(
+                    text = {Text(option)},
+                    onClick = {
+                        onSelectionChange(option)
+                        expanded = false
+                    }
+                )
             }
         }
     }
