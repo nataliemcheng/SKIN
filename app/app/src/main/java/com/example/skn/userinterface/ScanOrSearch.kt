@@ -200,7 +200,65 @@ fun ScanOrSearchScreen(
                                     modifier = Modifier.fillMaxSize()
                                 ) {
                                     items(products) { product ->
-                                        // … your item UI (Image, name, tags, favorite icon) …
+                                        val tags = product.tag_list?.map { it.lowercase() } ?: emptyList()
+                                        val description = product.description?.lowercase() ?: ""
+
+                                        val containsHarmful =
+                                            tags.any { it in harmfulIngredients.map { h -> h.lowercase() } } ||
+                                                    harmfulIngredients.any { it in description }
+
+                                        val containsBeneficial =
+                                            tags.any { it in beneficialIngredients.map { b -> b.lowercase() } } ||
+                                                    beneficialIngredients.any { it in description }
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Image(
+                                                painter = rememberAsyncImagePainter(product.image_link),
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .size(100.dp)
+                                                    .border(1.dp, Color.LightGray)
+                                            )
+
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    product.name ?: "Unnamed Product",
+                                                    style = MaterialTheme.typography.titleMedium
+                                                )
+
+                                                Text(
+                                                    text = when {
+                                                        containsHarmful -> "This product might be harmful ❌"
+                                                        containsBeneficial -> "This product is beneficial 🌿"
+                                                        else -> "This product is neutral"
+                                                    },
+                                                    color = when {
+                                                        containsHarmful -> Color.Red
+                                                        containsBeneficial -> Color.Green
+                                                        else -> Color.Blue
+                                                    }
+                                                )
+
+                                                Text(product.description ?: "No description available")
+                                            }
+
+                                            IconButton(onClick = { viewModel.toggleFavorite(product) }) {
+                                                val isFavorited = favoriteProducts.contains(product)
+                                                Icon(
+                                                    imageVector = if (isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                                    contentDescription = if (isFavorited) "Unfavorite" else "Favorite",
+                                                    tint = if (isFavorited) Color.Red else Color.Gray
+                                                )
+                                            }
+                                        }
+
+                                        HorizontalDivider()
                                     }
                                 }
                             }

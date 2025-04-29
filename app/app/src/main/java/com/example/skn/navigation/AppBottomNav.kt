@@ -66,10 +66,11 @@ fun AppBottomNavigation(
             selected = selectedTab == NavigationTab.PROFILE,
             onClick = onProfileClick
         )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Add, contentDescription = "Create Post") },
-            selected = selectedTab == NavigationTab.CREATE,
-            onClick = onCreatePostClick
-        )
+        //not implentating the social media aspect
+        //NavigationBarItem(
+        //    icon = { Icon(Icons.Default.Add, contentDescription = "Create Post") },
+        //    selected = selectedTab == NavigationTab.CREATE,
+        //    onClick = onCreatePostClick
+        //)
     }
 }
