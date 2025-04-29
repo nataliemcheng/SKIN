@@ -2,7 +2,7 @@ package com.example.skn.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.example.skn.api.UserProfile
+import com.example.skn.model.UserProfile
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase

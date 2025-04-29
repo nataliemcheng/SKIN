@@ -1,5 +1,6 @@
 package com.example.skn.api
 
+import com.example.skn.model.Product
 import retrofit2.Response
 import retrofit2.http.*
 

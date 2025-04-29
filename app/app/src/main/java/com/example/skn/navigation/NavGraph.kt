@@ -22,6 +22,7 @@ import com.example.skn.userinterface.UserProfileScreen
 import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.viewmodel.ProductViewModel
 import com.example.skn.viewmodel.UserProfileViewModel
+import com.example.skn.viewmodel.ChemicalsViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -30,6 +31,7 @@ fun AppNavGraph(
     productViewModel: ProductViewModel,
     authViewModel: AuthViewModel,
     userProfileViewModel: UserProfileViewModel,
+    chemicalsViewModel: ChemicalsViewModel,
     modifier: Modifier = Modifier
 ) {
     val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
@@ -134,6 +136,7 @@ fun AppNavGraph(
 
             ScanOrSearchScreen(
                 viewModel = productViewModel,
+                chemicalsViewModel = chemicalsViewModel,
                 onBackClick = { navController.popBackStack() },
                 onCreatePostClick = navigateToCreatePost,
                 onScanClick = navigateToScan,

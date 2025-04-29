@@ -1,4 +1,4 @@
-package com.example.skn.api
+package com.example.skn.model
 
 data class UserProfile(
     val uid: String = "",

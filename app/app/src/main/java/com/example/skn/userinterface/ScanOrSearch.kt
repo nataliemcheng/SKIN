@@ -23,12 +23,14 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.skn.viewmodel.ProductViewModel
+import com.example.skn.viewmodel.ChemicalsViewModel
 import com.example.skn.navigation.AppBottomNavigation
 import com.example.skn.navigation.NavigationTab
 
 @Composable
 fun ScanOrSearchScreen(
     viewModel: ProductViewModel,
+    chemicalsViewModel: ChemicalsViewModel,
     onBackClick: () -> Unit,
     onCreatePostClick: () -> Unit = {},
     onScanClick: () -> Unit = {},
@@ -49,6 +51,11 @@ fun ScanOrSearchScreen(
     val products by viewModel.products.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
+
+    // ChemicalsAPI
+    val chemicals by chemicalsViewModel.chemicals.collectAsState()
+    val chemicalsLoading by chemicalsViewModel.isLoading.collectAsState()
+    val chemicalsError by chemicalsViewModel.errorMessage.collectAsState()
 
     var selectedTab by remember { mutableStateOf(NavigationTab.SEARCH) }
 
@@ -130,24 +137,15 @@ fun ScanOrSearchScreen(
                                 brand = brand.ifBlank { null },
                                 productType = productType.ifBlank { null }
                             )
+                            val searchQuery = "$brand $productType" // search in ChemicalAPI
+                            if (searchQuery.isNotBlank()) {
+                                chemicalsViewModel.searchChemicals(searchQuery)
+                            }
                         }) {
                             Text("Search")
                         }
 
                         Spacer(Modifier.height(24.dp))
-
-                        // — Scan UI —
-                        Text("Scan a product", style = MaterialTheme.typography.titleMedium)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(150.dp)
-                                .border(2.dp, Color.Gray)
-                                .clickable { onScanClick() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("Point your camera at a barcode")
-                        }
                     }
 
                     // Right pane: results
@@ -207,6 +205,39 @@ fun ScanOrSearchScreen(
                                 }
                             }
                         }
+
+                        Spacer(Modifier.height(24.dp))
+
+                        Text("Ingredients Found", style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(8.dp))
+
+                        when {
+                            chemicalsLoading -> CircularProgressIndicator()
+                            chemicalsError != null -> Text("Error loading ingredients: $chemicalsError", color = MaterialTheme.colorScheme.error)
+                            chemicals.isEmpty() -> Text("No ingredients found.")
+                            else -> {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    items(chemicals) { chemical ->
+                                        Column(modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                        ) {
+                                            Text(chemical.chemicalName ?: "Unknown Chemical", style = MaterialTheme.typography.bodyLarge)
+                                            chemical.casNumber?.let { cas ->
+                                                Text("CAS No: $cas", style = MaterialTheme.typography.bodySmall)
+                                            }
+                                            chemical.brandName?.let {
+                                                Text("Brand: $it", style = MaterialTheme.typography.bodySmall)
+                                            }
+                                        }
+                                        HorizontalDivider()
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             } else {
@@ -243,22 +274,6 @@ fun ScanOrSearchScreen(
                     }
 
                     Spacer(Modifier.height(24.dp))
-
-                    // Camera Placeholder
-                    Text("Scan a product", style = MaterialTheme.typography.titleMedium)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                            .border(2.dp, Color.Gray)
-                            .clickable { onScanClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Point your camera at a barcode")
-                    }
-
-                    Spacer(Modifier.height(24.dp))
-
                     // Results Section
                     Text("Results", style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.height(8.dp))

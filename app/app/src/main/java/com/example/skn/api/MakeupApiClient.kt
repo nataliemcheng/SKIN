@@ -5,7 +5,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
-object ApiClient {
+object MakeupApiClient {
     private const val BASE_URL = "https://makeup-api.herokuapp.com/api/v1/"
 
     private val moshi = Moshi.Builder()
@@ -15,7 +15,7 @@ object ApiClient {
     val api: MakeupApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .addConverterFactory(MoshiConverterFactory.create(moshi)) // ✅ Use Moshi
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
             .create(MakeupApiService::class.java)
     }

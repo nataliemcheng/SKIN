@@ -10,6 +10,7 @@ import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.viewmodel.AuthViewModelFactory
 import com.example.skn.viewmodel.ProductViewModel
 import com.example.skn.viewmodel.UserProfileViewModel
+import com.example.skn.viewmodel.ChemicalsViewModel
 import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
@@ -23,6 +24,7 @@ class MainActivity : ComponentActivity() {
 
             val userProfileViewModel: UserProfileViewModel = viewModel()
             val productViewModel: ProductViewModel = viewModel()
+            val chemicalsViewModel: ChemicalsViewModel = viewModel()
 
             // Use the factory to create AuthViewModel
             val authViewModelFactory = AuthViewModelFactory(userProfileViewModel)
@@ -32,7 +34,8 @@ class MainActivity : ComponentActivity() {
                 navController = navController,
                 productViewModel = productViewModel,
                 authViewModel = authViewModel,
-                userProfileViewModel = userProfileViewModel
+                userProfileViewModel = userProfileViewModel,
+                chemicalsViewModel = chemicalsViewModel
             )
         }
     }

@@ -1,4 +1,4 @@
-package com.example.skn.api
+package com.example.skn.model
 
 data class Product(
     val id: Int = -1,

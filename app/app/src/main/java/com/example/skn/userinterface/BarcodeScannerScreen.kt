@@ -56,7 +56,7 @@ fun BarcodeScannerScreen(
                     val result = barcodes.firstOrNull()?.rawValue ?: "No barcode found"
                     Log.d("Barcode", "🖼️ Scanned from gallery: $result")
 
-                    // ✅ Navigate and show snackbar
+                    // Navigate and show snackbar
                     navController.navigate("scanOrSearch?barcode=${Uri.encode(result)}") {
                         popUpTo("barcodeScanner") { inclusive = true }
                     }
@@ -173,7 +173,7 @@ private fun processImageProxy(
                 }
             }
             .addOnFailureListener {
-                Log.e("Barcode", "❌ Camera scan failed", it)
+                Log.e("Barcode", "Camera scan failed", it)
             }
             .addOnCompleteListener {
                 imageProxy.close()

@@ -17,7 +17,7 @@ import com.example.skn.viewmodel.ProductViewModel
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.skn.api.Product
+import com.example.skn.model.Product
 import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.navigation.AppBottomNavigation
 import com.example.skn.navigation.NavigationTab

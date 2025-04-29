@@ -2,8 +2,8 @@ package com.example.skn.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.skn.api.ApiClient
-import com.example.skn.api.Product
+import com.example.skn.api.MakeupApiClient
+import com.example.skn.model.Product
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -129,7 +129,7 @@ class ProductViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val db = Firebase.firestore
-                val response = ApiClient.api.getAllProducts()
+                val response = MakeupApiClient.api.getAllProducts()
                 if (response.isSuccessful) {
                     val productList = response.body() ?: emptyList()
                     _products.value = productList
@@ -174,7 +174,7 @@ class ProductViewModel : ViewModel() {
         _loading.value = true
         viewModelScope.launch {
             try {
-                val response = ApiClient.api.searchProducts(
+                val response = MakeupApiClient.api.searchProducts(
                     productType = productType,
                     productCategory = productCategory,
                     productTags = productTags,
