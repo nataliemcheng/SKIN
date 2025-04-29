@@ -28,12 +28,18 @@ import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.example.skn.navigation.AppBottomNavigation
+import com.example.skn.navigation.NavigationTab
 
 @Composable
 fun BarcodeScannerScreen(
     navController: NavHostController,
     onScanComplete: (String) -> Unit, // ← optional callback if needed
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    onCreatePostClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
+    onHomeClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = context as LifecycleOwner
@@ -61,75 +67,90 @@ fun BarcodeScannerScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        AndroidView(factory = { ctx ->
-            val previewView = PreviewView(ctx).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-            }
-
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-            cameraProviderFuture.addListener({
-                val cameraProvider = cameraProviderFuture.get()
-
-                val preview = Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
-                }
-
-                val barcodeScanner = BarcodeScanning.getClient()
-                val imageAnalysis = ImageAnalysis.Builder()
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-
-                imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                    if (!isScanningDone) {
-                        processImageProxy(barcodeScanner, imageProxy) { result ->
-                            isScanningDone = true
-                            cameraProvider.unbindAll()
-
-                            navController.navigate("scanOrSearch?barcode=${Uri.encode(result)}") {
-                                popUpTo("barcodeScanner") { inclusive = true }
-                            }
-                        }
-                    } else {
-                        imageProxy.close()
-                    }
-                }
-
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-                try {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        cameraSelector,
-                        preview,
-                        imageAnalysis
+    var selectedTab by remember { mutableStateOf(NavigationTab.SCAN) }
+    Scaffold(bottomBar = { AppBottomNavigation(selectedTab = selectedTab,
+        onHomeClick = { selectedTab = NavigationTab.HOME
+            onHomeClick() },
+        onSearchClick = { selectedTab = NavigationTab.SEARCH
+            onSearchClick() },
+        onScanClick = { selectedTab = NavigationTab.SCAN },
+        onProfileClick = { selectedTab = NavigationTab.PROFILE
+            onProfileClick() },
+        onCreatePostClick = { selectedTab = NavigationTab.CREATE
+            onCreatePostClick() }
+    )
+    }
+    ) { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            AndroidView(factory = { ctx ->
+                val previewView = PreviewView(ctx).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                } catch (e: Exception) {
-                    Log.e("Camera", "Camera setup failed", e)
                 }
-            }, ContextCompat.getMainExecutor(ctx))
 
-            previewView
-        })
+                val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                cameraProviderFuture.addListener({
+                    val cameraProvider = cameraProviderFuture.get()
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(250.dp, 150.dp)
-                .border(3.dp, Color.Green, RoundedCornerShape(12.dp))
-        )
+                    val preview = Preview.Builder().build().also {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    }
 
-        Button(
-            onClick = { galleryLauncher.launch("image/*") },
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(16.dp)
-        ) {
-            Text("Choose from Gallery")
+                    val barcodeScanner = BarcodeScanning.getClient()
+                    val imageAnalysis = ImageAnalysis.Builder()
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build()
+
+                    imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                        if (!isScanningDone) {
+                            processImageProxy(barcodeScanner, imageProxy) { result ->
+                                isScanningDone = true
+                                cameraProvider.unbindAll()
+
+                                navController.navigate("scanOrSearch?barcode=${Uri.encode(result)}") {
+                                    popUpTo("barcodeScanner") { inclusive = true }
+                                }
+                            }
+                        } else {
+                            imageProxy.close()
+                        }
+                    }
+
+                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                    try {
+                        cameraProvider.unbindAll()
+                        cameraProvider.bindToLifecycle(
+                            lifecycleOwner,
+                            cameraSelector,
+                            preview,
+                            imageAnalysis
+                        )
+                    } catch (e: Exception) {
+                        Log.e("Camera", "Camera setup failed", e)
+                    }
+                }, ContextCompat.getMainExecutor(ctx))
+
+                previewView
+            })
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(250.dp, 150.dp)
+                    .border(3.dp, Color.Green, RoundedCornerShape(12.dp))
+            )
+
+            Button(
+                onClick = { galleryLauncher.launch("image/*") },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                Text("Choose from Gallery")
+            }
         }
     }
 }

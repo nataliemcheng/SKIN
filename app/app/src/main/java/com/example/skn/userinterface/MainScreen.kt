@@ -6,18 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import com.example.skn.viewmodel.ProductViewModel
 import androidx.compose.ui.unit.dp
@@ -25,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.skn.api.Product
 import com.example.skn.viewmodel.AuthViewModel
+import com.example.skn.navigation.AppBottomNavigation
+import com.example.skn.navigation.NavigationTab
 
 @Composable
 fun MainScreen(
@@ -33,10 +29,8 @@ fun MainScreen(
     onSearchClick: () -> Unit,
     onCreatePostClick: () -> Unit,
     onLogout: () -> Unit,
-    onHomeClick: () -> Unit,
     onProfileClick: () -> Unit,
     onScanClick: () -> Unit
-
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadProductsFromFirestore()
@@ -53,64 +47,25 @@ fun MainScreen(
     val isTablet = configuration.smallestScreenWidthDp >= 600
     val isTabletLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE && isTablet
 
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by remember { mutableStateOf(NavigationTab.HOME) }
 
     Scaffold(
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Search") },
-                    selected = selectedTab == 0,
-                    onClick = {
-                        selectedTab = 0
-                        onHomeClick()
-                    },
-                        colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color.Black,
-                        unselectedIconColor = Color.Black,
-                        indicatorColor = Color.Transparent
-                    )
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Search, contentDescription = "Create Post") },
-                    selected = selectedTab == 1,
-                    onClick = {
-                        selectedTab = 1
-                        onSearchClick()
-                    }
-                )
-                // Camera/Scan (center icon)
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            Icons.Filled.CameraAlt,
-                            contentDescription = "Scan Product",
-                            modifier = Modifier.size(30.dp)
-                        )
-                    },
-                    selected = selectedTab == 2,
-                    onClick = {
-                        selectedTab = 1
-                        onScanClick()
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
-                    selected = selectedTab == 3,
-                    onClick = {
-                        selectedTab = 2
-                        onProfileClick()
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Add, contentDescription = "Logout") },
-                    selected = selectedTab == 4,
-                    onClick = {
-                        authViewModel.logout()
-                        onCreatePostClick()
-                    }
-                )
-            }
+        bottomBar = { AppBottomNavigation(selectedTab = selectedTab,
+                onHomeClick = { selectedTab = NavigationTab.HOME },
+                onSearchClick = { selectedTab = NavigationTab.SEARCH
+                    onSearchClick()
+                },
+                onScanClick = { selectedTab = NavigationTab.SCAN
+                    onScanClick()
+                },
+                onProfileClick = { selectedTab = NavigationTab.PROFILE
+                    onProfileClick()
+                },
+                onCreatePostClick = { selectedTab = NavigationTab.CREATE
+                    authViewModel.logout() // TODO: maybe separate logout from create post
+                    onCreatePostClick()
+                }
+            )
         }
     ) { innerPadding ->
         Box(
@@ -182,7 +137,6 @@ fun MainScreen(
         }
     }
 }
-
 
 
 

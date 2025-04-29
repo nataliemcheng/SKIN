@@ -16,6 +16,7 @@ import com.example.skn.userinterface.MainScreen
 import com.example.skn.userinterface.ScanOrSearchScreen
 import com.example.skn.userinterface.BarcodeScannerScreen
 import com.example.skn.userinterface.LoginScreen
+import com.example.skn.userinterface.OnBoardingScreen
 import com.example.skn.userinterface.SignUpScreen
 import com.example.skn.userinterface.UserProfileScreen
 import com.example.skn.viewmodel.AuthViewModel
@@ -35,6 +36,36 @@ fun AppNavGraph(
     val startDestination = if (isLoggedIn) "main" else "login"
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Common navigation handlers to be reused
+    val navigateToHome = {
+        navController.navigate("main") {
+            popUpTo("main") { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    val navigateToSearch = {
+        navController.navigate("scanOrSearch?barcode=")
+    }
+
+    val navigateToScan = {
+        navController.navigate("barcodeScanner")
+    }
+
+    val navigateToProfile = {
+        navController.navigate("profile")
+    }
+
+    val navigateToCreatePost = {
+        // TODO: Implement your create post screen navigation
+    }
+
+    val performLogout = {
+        navController.navigate("login") {
+            popUpTo("main") { inclusive = true }  // so user can't go back
+            launchSingleTop = true
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -51,14 +82,14 @@ fun AppNavGraph(
                 }}
             )
         }
+
         composable("signup") {
             SignUpScreen(
                 authViewModel = authViewModel,
                 onSignUpSuccess = {
-                    navController.navigate("main") {
+                    navController.navigate("onboarding") {
                         popUpTo("signup") { inclusive = true }
                         launchSingleTop = true
-
                     }
                 },
                 onNavigateToLogin = {
@@ -69,46 +100,48 @@ fun AppNavGraph(
                 }
             )
         }
+
+        composable("onboarding") {
+            OnBoardingScreen(
+                authViewModel = authViewModel,
+                profileViewModel = userProfileViewModel,
+                onFinish = {
+                    navController.navigate("main") {
+                        popUpTo("onboarding") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
         composable("main") {
             MainScreen(
                 viewModel = productViewModel,
                 authViewModel = authViewModel,
-                onHomeClick = { navController.navigate("main") {
-                    popUpTo("main") { inclusive = true }
-                    launchSingleTop = true
-                            }
-                              },
-                onSearchClick = {navController.navigate("scanOrSearch?barcode=") },
-                onScanClick = { navController.navigate("barcodeScanner") },
-                onCreatePostClick = { /* your logic */ },
-                onLogout = {
-                    navController.navigate("login") {
-                        popUpTo("main") { inclusive = true }  // so user can't go back
-                        launchSingleTop = true
-                    }
-                },
-                onProfileClick = { navController.navigate("profile") }
+                onSearchClick = navigateToSearch,
+                onScanClick = navigateToScan,
+                onCreatePostClick = navigateToCreatePost,
+                onLogout = performLogout,
+                onProfileClick = navigateToProfile
             )
         }
+
         composable(
             "scanOrSearch?barcode={barcode}",
             arguments = listOf(navArgument("barcode") { defaultValue = "" })
         ) { backStackEntry ->
             val barcode = backStackEntry.arguments?.getString("barcode")
 
-            Scaffold(
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-            ) { paddingValues -> // 👈 receive paddingValues here
-                ScanOrSearchScreen(
-                    viewModel = productViewModel,
-                    onBackClick = { navController.popBackStack() },
-                    onCreatePostClick = { navController.navigate("post") },
-                    onScanClick = { navController.navigate("barcodeScanner") },
-                    snackbarHostState = snackbarHostState,
-                    scannedBarcode = barcode.takeIf { !it.isNullOrBlank() },
-                    modifier = Modifier.padding(paddingValues) // 👈 pass padding
-                )
-            }
+            ScanOrSearchScreen(
+                viewModel = productViewModel,
+                onBackClick = { navController.popBackStack() },
+                onCreatePostClick = navigateToCreatePost,
+                onScanClick = navigateToScan,
+                onHomeClick = navigateToHome,
+                onProfileClick = navigateToProfile,
+                snackbarHostState = snackbarHostState,
+                scannedBarcode = barcode.takeIf { !it.isNullOrBlank() }
+            )
         }
 
         composable("barcodeScanner") {
@@ -118,9 +151,12 @@ fun AppNavGraph(
                     navController.navigate("scanOrSearch?barcode=${Uri.encode(result)}") {
                         popUpTo("barcodeScanner") { inclusive = true }
                     }
-                } ,
-                snackbarHostState = snackbarHostState
-
+                },
+                snackbarHostState = snackbarHostState,
+                onCreatePostClick = navigateToCreatePost,
+                onSearchClick = navigateToSearch,
+                onHomeClick = navigateToHome,
+                onProfileClick = navigateToProfile,
             )
         }
 
@@ -128,10 +164,13 @@ fun AppNavGraph(
             UserProfileScreen(
                 authViewModel = authViewModel,
                 onNavigateBack = { navController.popBackStack() },
-                onLogout = { navController.navigate("login") },
-                profileViewModel = userProfileViewModel
+                onLogout = performLogout,
+                profileViewModel = userProfileViewModel,
+                onCreatePostClick = navigateToCreatePost,
+                onScanClick = navigateToScan,
+                onHomeClick = navigateToHome,
+                onSearchClick = navigateToSearch,
             )
         }
-
     }
 }
