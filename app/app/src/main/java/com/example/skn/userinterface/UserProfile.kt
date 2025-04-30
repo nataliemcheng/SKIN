@@ -89,8 +89,7 @@ fun UserProfileScreen(
                 onScanClick = { selectedTab = NavigationTab.SCAN
                     onScanClick() },
                 onProfileClick = { selectedTab = NavigationTab.PROFILE},
-                onCreatePostClick = { selectedTab = NavigationTab.CREATE
-                    onCreatePostClick() }
+
             )
         }
     ) { innerPadding ->

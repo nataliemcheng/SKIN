@@ -122,7 +122,6 @@ fun AppNavGraph(
                 authViewModel = authViewModel,
                 onSearchClick = navigateToSearch,
                 onScanClick = navigateToScan,
-                onCreatePostClick = navigateToCreatePost,
                 onLogout = performLogout,
                 onProfileClick = navigateToProfile
             )

@@ -27,7 +27,7 @@ fun MainScreen(
     viewModel: ProductViewModel,
     authViewModel: AuthViewModel,
     onSearchClick: () -> Unit,
-    onCreatePostClick: () -> Unit,
+    //onCreatePostClick: () -> Unit,
     onLogout: () -> Unit,
     onProfileClick: () -> Unit,
     onScanClick: () -> Unit
@@ -41,7 +41,10 @@ fun MainScreen(
     val error by viewModel.error.collectAsStateWithLifecycle()
     val recentlySearched by viewModel.recentlySearched.collectAsStateWithLifecycle()
     val favorites by viewModel.favoriteProducts.collectAsStateWithLifecycle()
+    val skinTags by viewModel.skinTags.collectAsStateWithLifecycle()
     val popular = products.filter { it.rating != null && it.rating >= 4.5 }.take(5)
+    val goodForSkin = products.filter  { skinTags[it.id] == ProductViewModel.TagType.GOOD }
+    val badForSkin = products.filter  { skinTags[it.id] == ProductViewModel.TagType.BAD }
 
     val configuration = LocalConfiguration.current
     val isTablet = configuration.smallestScreenWidthDp >= 600
@@ -60,11 +63,8 @@ fun MainScreen(
                 },
                 onProfileClick = { selectedTab = NavigationTab.PROFILE
                     onProfileClick()
-                },
-                onCreatePostClick = { selectedTab = NavigationTab.CREATE
-                    authViewModel.logout() // TODO: maybe separate logout from create post
-                    onCreatePostClick()
                 }
+
             )
         }
     ) { innerPadding ->
@@ -121,22 +121,18 @@ fun MainScreen(
                             Section("Popular", popular) { viewModel.toggleFavorite(it) }
                         }
                         item {
-                            Column {
-                                Text("Discover Tutorials", style = MaterialTheme.typography.titleMedium)
-                                Spacer(Modifier.height(8.dp))
-                                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    items(listOf("Dry Skin @user1", "Acne @user2", "Oily Skin @user3")) { item ->
-                                        TutorialCard(item)
-                                    }
-                                }
-                            }
+                            Section("Good for My SKIN", goodForSkin) { viewModel.toggleSkinTag(it, ProductViewModel.TagType.GOOD) }
+                        }
+                        item {
+                            Section("Bad for My SKIN", badForSkin) { viewModel.toggleSkinTag(it,ProductViewModel.TagType.BAD)}
+                        }
                         }
                     }
                 }
             }
         }
     }
-}
+
 
 
 

@@ -14,6 +14,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -73,9 +77,8 @@ fun ScanOrSearchScreen(
                 onScanClick = { selectedTab = NavigationTab.SCAN
                     onScanClick() },
                 onProfileClick = { selectedTab = NavigationTab.PROFILE
-                    onProfileClick() },
-                onCreatePostClick = { selectedTab = NavigationTab.CREATE
-                    onCreatePostClick() }
+                    onProfileClick() }
+
             )
         }
     ) { innerPadding ->
@@ -194,6 +197,7 @@ fun ScanOrSearchScreen(
                                     "free from"
                                 )
                                 val favoriteProducts by viewModel.favoriteProducts.collectAsState()
+                                val skinTags         by viewModel.skinTags.collectAsState()
 
                                 LazyColumn(
                                     verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -245,16 +249,13 @@ fun ScanOrSearchScreen(
                                                     }
                                                 )
 
-                                                Text(product.description ?: "No description available")
-                                            }
-
-                                            IconButton(onClick = { viewModel.toggleFavorite(product) }) {
-                                                val isFavorited = favoriteProducts.contains(product)
-                                                Icon(
-                                                    imageVector = if (isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                                    contentDescription = if (isFavorited) "Unfavorite" else "Favorite",
-                                                    tint = if (isFavorited) Color.Red else Color.Gray
+                                                Text(
+                                                    product.description
+                                                        ?: "No description available"
                                                 )
+                                            }
+                                            Column {
+
                                             }
                                         }
 
@@ -384,6 +385,7 @@ fun ScanOrSearchScreen(
 
 
                             val favoriteProducts by viewModel.favoriteProducts.collectAsState()
+                            val skinTags         by viewModel.skinTags.collectAsState()
 
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -437,17 +439,49 @@ fun ScanOrSearchScreen(
 
                                             Text(product.description ?: "No description available")
                                         }
+                                        Column(
+                                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ){
+                                            IconButton(onClick = { viewModel.toggleFavorite(product) }) {
+                                                val isFavorited = favoriteProducts.contains(product)
+                                                Icon(
+                                                    imageVector = if (isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                                    contentDescription = if (isFavorited) "Unfavorite" else "Favorite",
+                                                    tint = if (isFavorited) Color.Red else Color.Gray
+                                                )
+                                            }
+                                            // Good for my skin
+                                            IconButton(onClick = {
+                                                viewModel.toggleSkinTag(product, ProductViewModel.TagType.GOOD)
+                                            }) {
+                                                Icon(
+                                                    imageVector = if (skinTags[product.id] == ProductViewModel.TagType.GOOD)
+                                                        Icons.Default.ThumbUp
+                                                    else Icons.Outlined.ThumbUp,
+                                                    tint = if (skinTags[product.id] == ProductViewModel.TagType.GOOD)
+                                                        Color.Green
+                                                    else Color.Gray,
+                                                    contentDescription = "Mark Good"
+                                                )
+                                            }
 
-                                        IconButton(onClick = { viewModel.toggleFavorite(product) }) {
-                                            val isFavorited = favoriteProducts.contains(product)
-                                            Icon(
-                                                imageVector = if (isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                                contentDescription = if (isFavorited) "Unfavorite" else "Favorite",
-                                                tint = if (isFavorited) Color.Red else Color.Gray
-                                            )
+                                            // Bad for my skin
+                                            IconButton(onClick = {
+                                                viewModel.toggleSkinTag(product, ProductViewModel.TagType.BAD)
+                                            }) {
+                                                Icon(
+                                                    imageVector = if (skinTags[product.id] == ProductViewModel.TagType.BAD)
+                                                        Icons.Default.Warning
+                                                    else Icons.Outlined.Warning,
+                                                    tint = if (skinTags[product.id] == ProductViewModel.TagType.BAD)
+                                                        Color.Red
+                                                    else Color.Gray,
+                                                    contentDescription = "Mark Bad"
+                                                )
+                                            }
+                                            }
                                         }
-                                    }
-
                                     HorizontalDivider()
                                 }
                             }

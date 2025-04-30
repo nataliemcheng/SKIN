@@ -28,9 +28,14 @@ class ProductViewModel : ViewModel() {
     private val _favoriteProducts = MutableStateFlow<List<Product>>(emptyList())
     val favoriteProducts: StateFlow<List<Product>> = _favoriteProducts
 
+    enum class TagType { GOOD, BAD }
+    private val _skinTags = MutableStateFlow<Map<Int, TagType>>(emptyMap())
+    val skinTags: StateFlow<Map<Int, TagType>> = _skinTags
+
     init {
         loadRecentSearchesFromFirebase()
         loadFavoritesFromFirestore()
+        loadSkinTagsFromFirestore()
     }
 
     fun toggleFavorite(product: Product) {
@@ -300,6 +305,50 @@ class ProductViewModel : ViewModel() {
             .addOnCompleteListener {
                 _loading.value = false
             }
+    }
+    private fun loadSkinTagsFromFirestore() {
+        val uid = getCurrentUserId() ?: return
+        Firebase.firestore
+            .collection("user_activity")
+            .document(uid)
+            .collection("skinTags")
+            .addSnapshotListener { snap, err ->
+                if (err != null || snap == null) return@addSnapshotListener
+                _skinTags.value = snap.documents.mapNotNull { doc ->
+                    val typeStr = doc.getString("tagType") ?: return@mapNotNull null
+                    val pid = doc.id.toIntOrNull() ?: return@mapNotNull null
+                    pid to TagType.valueOf(typeStr)
+                }.toMap()
+            }
+    }
+    fun toggleSkinTag(product: Product, tag: TagType) {
+        val pid = product.id
+        val current = _skinTags.value[pid]
+        if (current == tag) removeSkinTag(pid)
+        else setSkinTag(pid, tag)
+    }
+
+    private fun setSkinTag(productId: Int, tag: TagType) {
+        val uid = getCurrentUserId() ?: return
+        Firebase.firestore
+            .collection("user_activity")
+            .document(uid)
+            .collection("skinTags")
+            .document(productId.toString())
+            .set(mapOf(
+                "tagType" to tag.name,
+                "timestamp" to System.currentTimeMillis()
+            ))
+    }
+
+    private fun removeSkinTag(productId: Int) {
+        val uid = getCurrentUserId() ?: return
+        Firebase.firestore
+            .collection("user_activity")
+            .document(uid)
+            .collection("skinTags")
+            .document(productId.toString())
+            .delete()
     }
 
 }

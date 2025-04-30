@@ -76,8 +76,7 @@ fun BarcodeScannerScreen(
         onScanClick = { selectedTab = NavigationTab.SCAN },
         onProfileClick = { selectedTab = NavigationTab.PROFILE
             onProfileClick() },
-        onCreatePostClick = { selectedTab = NavigationTab.CREATE
-            onCreatePostClick() }
+
     )
     }
     ) { innerPadding ->
