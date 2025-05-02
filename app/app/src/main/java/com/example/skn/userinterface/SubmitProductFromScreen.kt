@@ -1,0 +1,274 @@
+package com.example.skn.userinterface
+
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
+import java.io.File
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SubmitProductFormScreen(
+    navController: NavHostController,
+    barcode: String,
+    onSubmit: (String, String, String, String, Uri?, Uri?, String) -> Unit
+) {
+    val context = LocalContext.current
+    var productName by remember { mutableStateOf(TextFieldValue()) }
+    var brandName by remember { mutableStateOf(TextFieldValue()) }
+    var description by remember { mutableStateOf(TextFieldValue()) }
+    var ingredients by remember { mutableStateOf(TextFieldValue()) }
+
+
+    var frontImageUri by remember { mutableStateOf<Uri?>(null) }
+    var backImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    var showFrontOptions by remember { mutableStateOf(false) }
+    var showBackOptions by remember { mutableStateOf(false) }
+
+    val galleryLauncherFront = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+        frontImageUri = it
+    }
+
+    val galleryLauncherBack = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+        backImageUri = it
+    }
+
+    val cameraLauncherFront = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        frontImageUri = bitmap?.let {
+            saveBitmapToCache(context, it, "front_image_${System.currentTimeMillis()}")
+        }
+    }
+
+    val cameraLauncherBack = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        frontImageUri = bitmap?.let {
+            saveBitmapToCache(context, it, "front_image_${System.currentTimeMillis()}")
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Add Product") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.CameraAlt, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    TextButton(onClick = {
+                        onSubmit(
+                            productName.text,
+                            brandName.text,
+                            description.text,
+                            ingredients.text,
+                            frontImageUri,
+                            backImageUri,
+                            barcode
+                        )
+                        navController.popBackStack()
+                    }) {
+                        Text("Submit")
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            Modifier
+                .padding(innerPadding)
+                .padding(16.dp)
+                .fillMaxSize()
+        ) {
+            OutlinedTextField(
+                value = barcode,
+                onValueChange = {},
+                label = { Text("Barcode") },
+                enabled = false,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = productName,
+                onValueChange = { productName = it },
+                label = { Text("Product Name") },
+                placeholder = { Text("e.g. Grown Alchemist Hand Wash") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = brandName,
+                onValueChange = { brandName = it },
+                label = { Text("Brand Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            Text("Both Front and Back Product Photos", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(140.dp)
+                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                        .clickable { showFrontOptions = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (frontImageUri != null) {
+                        Image(
+                            painter = rememberAsyncImagePainter(frontImageUri),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text("Upload a photo of\nFRONT PACKAGING", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(140.dp)
+                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                        .clickable { showBackOptions = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (backImageUri != null) {
+                        Image(
+                            painter = rememberAsyncImagePainter(backImageUri),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text("Upload a photo of\nBACK PACKAGING", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Text("Description", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Description") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(24.dp))
+
+            Text("Ingredients", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = ingredients,
+                onValueChange = { ingredients = it },
+                label = { Text("Ingredients") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            Button(
+                onClick = {
+                    onSubmit(
+                        productName.text,
+                        brandName.text,
+                        description.text,
+                        ingredients.text,
+                        frontImageUri,
+                        backImageUri,
+                        barcode
+                    )
+                    navController.popBackStack()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("SUBMIT")
+            }
+        }
+
+        if (showFrontOptions) {
+            ModalBottomSheet(onDismissRequest = { showFrontOptions = false }) {
+                ListItem(
+                    headlineContent = { Text("Take a photo") },
+                    modifier = Modifier.clickable {
+                        cameraLauncherFront.launch(null)
+                        showFrontOptions = false
+                    }
+                )
+                ListItem(
+                    headlineContent = { Text("Choose from gallery") },
+                    modifier = Modifier.clickable {
+                        galleryLauncherFront.launch("image/*")
+                        showFrontOptions = false
+                    }
+                )
+            }
+        }
+
+        if (showBackOptions) {
+            ModalBottomSheet(onDismissRequest = { showBackOptions = false }) {
+                ListItem(
+                    headlineContent = { Text("Take a photo") },
+                    modifier = Modifier.clickable {
+                        cameraLauncherBack.launch(null)
+                        showBackOptions = false
+                    }
+                )
+                ListItem(
+                    headlineContent = { Text("Choose from gallery") },
+                    modifier = Modifier.clickable {
+                        galleryLauncherBack.launch("image/*")
+                        showBackOptions = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+
+
+fun saveBitmapToCache(context: Context, bitmap: Bitmap, fileName: String): Uri {
+    val file = File(context.cacheDir, "$fileName.jpg")
+    file.outputStream().use { out ->
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+    }
+    return FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.provider",
+        file
+    )
+}
+
+
+

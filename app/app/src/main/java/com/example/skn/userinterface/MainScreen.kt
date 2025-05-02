@@ -27,13 +27,21 @@ fun MainScreen(
     viewModel: ProductViewModel,
     authViewModel: AuthViewModel,
     onSearchClick: () -> Unit,
-    //onCreatePostClick: () -> Unit,
-    onLogout: () -> Unit,
     onProfileClick: () -> Unit,
-    onScanClick: () -> Unit
+    onScanClick: () -> Unit,
+    submitted: Boolean = false
+
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadProductsFromFirestore()
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(submitted) {
+        if (submitted) {
+            snackbarHostState.showSnackbar("✅ Product submitted successfully")
+        }
     }
 
     val products by viewModel.products.collectAsStateWithLifecycle()
@@ -52,7 +60,9 @@ fun MainScreen(
 
     var selectedTab by remember { mutableStateOf(NavigationTab.HOME) }
 
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { AppBottomNavigation(selectedTab = selectedTab,
                 onHomeClick = { selectedTab = NavigationTab.HOME },
                 onSearchClick = { selectedTab = NavigationTab.SEARCH

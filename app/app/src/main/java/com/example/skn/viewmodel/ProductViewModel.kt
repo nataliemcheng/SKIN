@@ -1,5 +1,6 @@
 package com.example.skn.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skn.api.MakeupApiClient
@@ -10,11 +11,18 @@ import kotlinx.coroutines.launch
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import android.util.Log
+import com.example.skn.api.UPCItemApiClient
+import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.tasks.await
 
 
 class ProductViewModel : ViewModel() {
     private val _products = MutableStateFlow<List<Product>>(emptyList())
     val products: StateFlow<List<Product>> = _products
+
+    private val _scannedProduct = MutableStateFlow<Product?>(null)
+    val scannedProduct: StateFlow<Product?> = _scannedProduct
+
 
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading
@@ -349,6 +357,98 @@ class ProductViewModel : ViewModel() {
             .collection("skinTags")
             .document(productId.toString())
             .delete()
+    }
+
+    fun fetchProductFromUpc(upc: String) {
+        viewModelScope.launch {
+            try {
+                val response = UPCItemApiClient.api.lookupUPC(upc)
+                val item = response.items.firstOrNull()
+
+                if (item != null ) {
+                    val product = Product(
+                        name = item.title,
+                        brand = item.brand,
+                        description = item.description,
+                        image_link = item.images?.firstOrNull()
+                    )
+
+                    // Firestore check (if you have logic to verify brand match, etc)
+                    item.brand?.let { brand ->
+                        val exists = checkFirestoreForBrand(brand)
+                    if (exists) {
+                        _scannedProduct.value = product
+                    } else {
+                        _scannedProduct.value = null
+                        _error.value = "Product not in database"
+                    }
+                }
+                } else {
+                    _scannedProduct.value = null
+                    _error.value = "No product found for this UPC"
+                }
+            } catch (e: Exception) {
+                _scannedProduct.value = null
+                _error.value = e.localizedMessage
+            }
+        }
+    }
+
+    private suspend fun checkFirestoreForBrand(brand: String): Boolean {
+        val snapshot = Firebase.firestore.collection("all_products")
+            .whereEqualTo("brand", brand)
+            .get()
+            .await()
+
+        return !snapshot.isEmpty
+    }
+
+    suspend fun submitProductToFirestore(
+        name: String,
+        brand: String,
+        description: String,
+        ingredients: String,
+        frontUri: Uri?,
+        backUri: Uri?,
+        barcode: String
+    ) {
+        val storage = Firebase.storage
+        val firestore = Firebase.firestore
+        val productData = mutableMapOf<String, Any>(
+            "name" to name,
+            "brand" to brand,
+            "description" to description,
+            "ingredients" to ingredients,
+            "barcode" to barcode
+        )
+
+        // Upload front image
+        frontUri?.let {
+            val frontRef = storage.reference.child("products/${barcode}_front.jpg")
+            frontRef.putFile(it).await()
+            val frontUrl = frontRef.downloadUrl.await().toString()
+            productData["front_image_url"] = frontUrl
+        }
+
+        // Upload back image
+        backUri?.let {
+            val backRef = storage.reference.child("products/${barcode}_back.jpg")
+            backRef.putFile(it).await()
+            val backUrl = backRef.downloadUrl.await().toString()
+            productData["back_image_url"] = backUrl
+        }
+
+        // Save to Firestore
+        firestore.collection("pending_products")  // Or "all_products"
+            .document(barcode)
+            .set(productData)
+            .await()
+    }
+
+
+    fun resetState() {
+        _scannedProduct.value = null
+        _error.value = null
     }
 
 }

@@ -1,13 +1,12 @@
 package com.example.skn.navigation
 
-import android.net.Uri
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
+import android.util.Log
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -18,12 +17,17 @@ import com.example.skn.userinterface.BarcodeScannerScreen
 import com.example.skn.userinterface.LoginScreen
 import com.example.skn.userinterface.OnBoardingScreen
 import com.example.skn.userinterface.SignUpScreen
+import com.example.skn.userinterface.SubmitProductFormScreen
 import com.example.skn.userinterface.UserProfileScreen
 import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.viewmodel.ProductViewModel
 import com.example.skn.viewmodel.UserProfileViewModel
 import com.example.skn.viewmodel.ChemicalsViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun AppNavGraph(
@@ -116,14 +120,19 @@ fun AppNavGraph(
             )
         }
 
-        composable("main") {
+        composable("main?submitted={submitted}", arguments = listOf(
+            navArgument("submitted") { defaultValue = "false" }
+        )) { backStackEntry ->
+            val submitted = backStackEntry.arguments?.getString("submitted") == "true"
+
             MainScreen(
                 viewModel = productViewModel,
                 authViewModel = authViewModel,
                 onSearchClick = navigateToSearch,
                 onScanClick = navigateToScan,
-                onLogout = performLogout,
-                onProfileClick = navigateToProfile
+                onProfileClick = navigateToProfile,
+                submitted = submitted // ← pass this to MainScreen
+
             )
         }
 
@@ -149,18 +158,55 @@ fun AppNavGraph(
         composable("barcodeScanner") {
             BarcodeScannerScreen(
                 navController = navController,
-                onScanComplete = { result ->
-                    navController.navigate("scanOrSearch?barcode=${Uri.encode(result)}") {
-                        popUpTo("barcodeScanner") { inclusive = true }
-                    }
-                },
-                snackbarHostState = snackbarHostState,
-                onCreatePostClick = navigateToCreatePost,
-                onSearchClick = navigateToSearch,
-                onHomeClick = navigateToHome,
-                onProfileClick = navigateToProfile,
+                viewModel = productViewModel,
             )
         }
+
+        composable(
+            route = "submitProduct/{barcode}",
+            arguments = listOf(navArgument("barcode") { defaultValue = "" })
+        ) { backStackEntry ->
+            val barcode = backStackEntry.arguments?.getString("barcode") ?: ""
+            val context = LocalContext.current
+            val snackbarHostState = remember { SnackbarHostState() }
+
+            SubmitProductFormScreen(
+                navController = navController,
+                barcode = barcode,
+                onSubmit = { name, brand, description, ingredients, frontUri, backUri, upc ->
+                    // Use a coroutine for Firebase calls
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            productViewModel.submitProductToFirestore(
+                                name = name,
+                                brand = brand,
+                                description = description,
+                                ingredients = ingredients,
+                                frontUri = frontUri,
+                                backUri = backUri,
+                                barcode = upc
+                            )
+                            withContext(Dispatchers.Main) {
+                                productViewModel.resetState()
+                                navController.navigate("main?submitted=true") {
+                                    popUpTo("main") { inclusive = true }
+                                    launchSingleTop = true
+                                }
+                            }
+                            Log.d("Firestore", "✅ Product submitted successfully.")
+                        } catch (e: Exception) {
+                            Log.e("Firestore", "❌ Failed to submit: ${e.localizedMessage}")
+                            withContext(Dispatchers.Main) {
+                                snackbarHostState.showSnackbar("❌ Failed to submit product")
+                            }
+                        }
+                    }
+                }
+            )
+
+        }
+
+
 
         composable("profile") {
             UserProfileScreen(
@@ -174,5 +220,6 @@ fun AppNavGraph(
                 onSearchClick = navigateToSearch,
             )
         }
+
     }
 }
