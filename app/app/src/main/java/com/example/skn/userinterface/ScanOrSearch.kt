@@ -333,6 +333,10 @@ fun ScanOrSearchScreen(
                             brand = brand.ifBlank { null },
                             productType = productType.ifBlank { null }
                         )
+                        val searchQuery = "$brand $productType" // search in ChemicalAPI
+                        if (searchQuery.isNotBlank()) {
+                            chemicalsViewModel.searchChemicals(searchQuery)
+                        }
                     }) {
                         Text("Search")
                     }
@@ -356,38 +360,8 @@ fun ScanOrSearchScreen(
                         }
 
                         else -> {
-                            val harmfulIngredients = listOf(
-                                "parabens",
-                                "paraben",
-                                "phthalates",
-                                "sulfates",
-                                "formaldehyde",
-                                "triclosan",
-                                "fragrance",
-                                "alcohol",
-                                "silicones",
-                                "oxybenzone",
-                                "toluene",
-                                "PFAS",
-                                "dye"
-                            )
-                            val beneficialIngredients = listOf(
-                                "hyaluronic acid",
-                                "niacinamide",
-                                "vitamin C",
-                                "vitamin E",
-                                "vitamin A",
-                                "retinol",
-                                "glycolic acid",
-                                "salicylic acid",
-                                "ceramides",
-                                "peptides",
-                                "AHA",
-                                "BHA",
-                                "vegan",
-                                "free from"
-                            )
-
+                            val harmfulIngredients = listOf("parabens", "paraben", "phthalates", "sulfates", "formaldehyde", "triclosan", "fragrance", "alcohol", "silicones", "oxybenzone", "toluene", "PFAS", "dye")
+                            val beneficialIngredients = listOf("hyaluronic acid", "niacinamide", "vitamin C", "vitamin E", "vitamin A", "retinol", "glycolic acid", "salicylic acid", "ceramides", "peptides", "AHA", "BHA", "vegan", "free from")
 
                             val favoriteProducts by viewModel.favoriteProducts.collectAsState()
                             val skinTags         by viewModel.skinTags.collectAsState()
@@ -490,6 +464,37 @@ fun ScanOrSearchScreen(
                                             }
                                             }
                                         }
+                                    HorizontalDivider()
+                                }
+                            }
+                        }
+                    }
+
+                    when {
+                        chemicalsLoading -> CircularProgressIndicator()
+                        chemicalsError != null -> Text("Error loading ingredients: $chemicalsError", color = MaterialTheme.colorScheme.error)
+                        chemicals.isEmpty() -> Text("No ingredients found.")
+                        else -> {
+                            LazyColumn(
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(chemicals) { chemical ->
+                                    Column(modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                    ) {
+                                        Text(chemical.chemicalName ?: "Unknown Chemical", style = MaterialTheme.typography.bodyLarge)
+                                        chemical.casNumber?.let { cas ->
+                                            Text("CAS No: $cas", style = MaterialTheme.typography.bodySmall)
+                                        }
+                                        chemical.brandName?.let {
+                                            Text("Brand: $it", style = MaterialTheme.typography.bodySmall)
+                                        }
+                                        chemical.productName?.let {
+                                            Text("Product: $it", style = MaterialTheme.typography.bodySmall)
+                                        }
+                                    }
                                     HorizontalDivider()
                                 }
                             }
