@@ -196,13 +196,14 @@ fun BarcodeScannerScreen(
                 }
             },
             modifier = Modifier
-                .padding(16.dp)
+                .padding(start = 16.dp, top = 50.dp)
                 .align(Alignment.TopStart)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
-                tint = Color.White
+                tint = Color.White,
+                modifier = Modifier.size(32.dp),
             )
         }
 
