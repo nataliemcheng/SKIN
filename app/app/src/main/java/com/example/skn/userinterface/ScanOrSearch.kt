@@ -66,6 +66,9 @@ fun ScanOrSearchScreen(
 
     var selectedTab by remember { mutableStateOf(NavigationTab.SEARCH) }
 
+    // for toggle
+    var showChemicals by remember { mutableStateOf(false) }
+
     LaunchedEffect(scannedBarcode) {
         scannedBarcode?.let {
             snackbarHostState.showSnackbar("Scanned: $it")
@@ -349,9 +352,38 @@ fun ScanOrSearchScreen(
                         Text("Search")
                     }
 
+                    // Toggle between product and ingredient view
+                    TabRow(selectedTabIndex = if (showChemicals) 1 else 0) {
+                        Tab(
+                            selected = !showChemicals,
+                            onClick  = { showChemicals = false },
+                            text     = { Text("Products") }
+                        )
+                        Tab(
+                            selected = showChemicals,
+                            onClick  = { showChemicals = true },
+                            text     = { Text("Ingredients") }
+                        )
+                    }
                     Spacer(Modifier.height(24.dp))
-                    // Results Section
-                    Text("Results", style = MaterialTheme.typography.titleMedium)
+                    // Results Section this doesnt work as intended
+                    if (!showChemicals) {
+                        Text("Results", style = MaterialTheme.typography.titleMedium)
+                        when {
+                            loading           -> CircularProgressIndicator()
+                            error != null     -> Text("Error: $error", color = MaterialTheme.colorScheme.error)
+                            products.isEmpty() -> Text("No products found.")
+                            else              -> LazyColumn { /* …product items… */ }
+                        }
+                    } else {
+                        Text("Ingredients", style = MaterialTheme.typography.titleMedium)
+                        when {
+                            chemicalsLoading   -> CircularProgressIndicator()
+                            chemicalsError != null -> Text("Error: $chemicalsError", color = MaterialTheme.colorScheme.error)
+                            chemicals.isEmpty() -> Text("No ingredients found.")
+                            else                -> LazyColumn { /* …chemical items… */ }
+                        }
+                    }
                     Spacer(Modifier.height(8.dp))
 
                     when {
