@@ -53,6 +53,7 @@ fun ScanOrSearchScreen(
 
     var brand by remember { mutableStateOf("") }
     var productType by remember { mutableStateOf("") }
+    var ingredient by remember { mutableStateOf("") }
 
     val products by viewModel.products.collectAsState()
     val loading by viewModel.loading.collectAsState()
@@ -304,7 +305,9 @@ fun ScanOrSearchScreen(
                         }
                     }
                 }
-            } else {
+            }
+            // Portrait mode
+            else {
                 Column(
                     modifier = modifier
                         .fillMaxSize()
@@ -320,12 +323,18 @@ fun ScanOrSearchScreen(
                         label = { Text("Brand") },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = productType,
                         onValueChange = { productType = it },
                         label = { Text("Product") },
                         modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                            value = ingredient,
+                    onValueChange = { ingredient = it },
+                    label = { Text("Ingredient") },
+                    placeholder = { Text("e.g. hyaluronic acid") },
+                    modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = {
@@ -336,6 +345,9 @@ fun ScanOrSearchScreen(
                         val searchQuery = "$brand $productType" // search in ChemicalAPI
                         if (searchQuery.isNotBlank()) {
                             chemicalsViewModel.searchChemicals(searchQuery)
+                        }
+                        if (ingredient.isNotBlank()) {
+                            chemicalsViewModel.searchChemicals(ingredient)
                         }
                     }) {
                         Text("Search")
