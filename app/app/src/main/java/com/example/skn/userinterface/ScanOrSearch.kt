@@ -114,10 +114,6 @@ fun ScanOrSearchScreen(
                                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                                 Text("Back to Feed")
                             }
-                            Button(onClick = onCreatePostClick) {
-                                Icon(Icons.Default.Add, contentDescription = null)
-                                Text("Create Post")
-                            }
                         }
 
                         Spacer(Modifier.height(16.dp))

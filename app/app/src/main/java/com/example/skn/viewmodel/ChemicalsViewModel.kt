@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skn.api.ChemicalsApiClient
 import com.example.skn.model.ChemicalRecord
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class ChemicalsViewModel : ViewModel() {
 
@@ -23,6 +25,9 @@ class ChemicalsViewModel : ViewModel() {
     private val resourceId = "57da6c9a-41a7-44b0-ab8d-815ff2cd5913" // dataset ID
 
     private val _allChemicals = mutableListOf<ChemicalRecord>()
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private val collectionName = "all_products"
 
     // Variables for pagination
     private var currentOffset = 0
@@ -139,5 +144,23 @@ class ChemicalsViewModel : ViewModel() {
         }
 
         _chemicals.value = filtered
+    }
+
+    fun saveAllChemicalsToFirestore() = viewModelScope.launch {
+        val batch = firestore.batch()
+        val col   = firestore.collection(collectionName)
+
+        _allChemicals.forEach { chem ->
+            val docId = chem.casNumber ?: col.document().id
+            batch.set(col.document(docId), chem)
+        }
+
+        try {
+            batch.commit().await()
+            Log.d("Firestore", "Saved ${_allChemicals.size} chemicals to Firebase")
+        } catch (e: Exception) {
+            _errorMessage.value = "Save failed: ${e.localizedMessage}"
+            Log.e("Firestore", " Error saving to Firebase", e)
+        }
     }
 }
