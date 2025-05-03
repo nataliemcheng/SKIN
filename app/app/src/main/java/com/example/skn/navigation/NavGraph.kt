@@ -16,6 +16,7 @@ import com.example.skn.userinterface.ScanOrSearchScreen
 import com.example.skn.userinterface.BarcodeScannerScreen
 import com.example.skn.userinterface.LoginScreen
 import com.example.skn.userinterface.OnBoardingScreen
+import com.example.skn.userinterface.ProductDetailScreen
 import com.example.skn.userinterface.SignUpScreen
 import com.example.skn.userinterface.SubmitProductFormScreen
 import com.example.skn.userinterface.UserProfileScreen
@@ -131,10 +132,24 @@ fun AppNavGraph(
                 onSearchClick = navigateToSearch,
                 onScanClick = navigateToScan,
                 onProfileClick = navigateToProfile,
+                navController = navController,
                 submitted = submitted // ← pass this to MainScreen
 
             )
         }
+
+        composable("product/{productId}") { backStackEntry ->
+            val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
+            if (productId != null) {
+                ProductDetailScreen(
+                    productId = productId,
+                    viewModel = productViewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+        }
+
+
 
         composable(
             "scanOrSearch?barcode={barcode}",
@@ -145,6 +160,7 @@ fun AppNavGraph(
             ScanOrSearchScreen(
                 viewModel = productViewModel,
                 chemicalsViewModel = chemicalsViewModel,
+                navController = navController,
                 onBackClick = { navController.popBackStack() },
                 onCreatePostClick = navigateToCreatePost,
                 onScanClick = navigateToScan,

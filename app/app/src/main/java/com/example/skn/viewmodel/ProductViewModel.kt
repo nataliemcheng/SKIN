@@ -12,6 +12,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import android.util.Log
 import com.example.skn.api.UPCItemApiClient
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.tasks.await
 
@@ -68,6 +69,7 @@ class ProductViewModel : ViewModel() {
             "name" to product.name,
             "brand" to product.brand,
             "productType" to product.product_type,
+            "imageLink" to product.image_link,
             "timestamp" to System.currentTimeMillis()
         )
 
@@ -95,8 +97,8 @@ class ProductViewModel : ViewModel() {
                         name = doc.getString("name"),
                         brand = doc.getString("brand"),
                         product_type = doc.getString("productType"),
+                        image_link = doc.getString("imageLink"),
                         rating = null,
-                        image_link = null,
                         api_featured_image = null,
                         category = null,
                         created_at = null,
@@ -220,7 +222,8 @@ class ProductViewModel : ViewModel() {
     }
 
     private fun getCurrentUserId(): String? {
-        return com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
+        return FirebaseAuth.getInstance().currentUser?.email
+
     }
 
     private fun logSearchQueryToFirebase(product: Product) {
@@ -257,7 +260,7 @@ class ProductViewModel : ViewModel() {
 
         db.collection("user_activity")
             .document(userId)
-            .collection("test_logs")
+            .collection("search_history")
             .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .limit(10)
             .get()
@@ -449,6 +452,10 @@ class ProductViewModel : ViewModel() {
     fun resetState() {
         _scannedProduct.value = null
         _error.value = null
+    }
+
+    fun logSearchManually(it: Any) {
+
     }
 
 }

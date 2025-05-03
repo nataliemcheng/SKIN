@@ -43,29 +43,25 @@ class UserProfileViewModel : ViewModel()  {
 
     // Get current user ID or null if not logged in
     private fun getCurrentUserId(): String? {
-        return auth.currentUser?.uid
+        return auth.currentUser?.email
     }
 
     // Fetch user profile from Firestore
-    fun fetchUser(userId: String) {
+    fun fetchUser(email: String) {
         viewModelScope.launch {
             try {
                 _loading.value = true
                 _error.value = null
 
-                val docRef = firestore.collection(userCollection).document(userId)
+                val docRef = firestore.collection(userCollection).document(email)
                 val document = docRef.get().await()
 
                 if (document.exists()) {
-                    // Create profile document
-                    val profile = document.toObject(UserProfile::class.java) ?: UserProfile(uid = userId)
+                    val profile = document.toObject(UserProfile::class.java) ?: UserProfile(uid = email)
                     _userProfile.value = profile
                 } else {
-                    // Create a new profile with default fields if not found
-                    val newProfile = UserProfile(uid = userId)
+                    val newProfile = UserProfile(uid = email)
                     _userProfile.value = newProfile
-                    // Save the new profile but don't mark as update success
-                    // This prevents auto-navigation during initial profile creation
                     saveUserProfileWithoutSuccess(newProfile)
                 }
             } catch (e: Exception) {
@@ -77,9 +73,11 @@ class UserProfileViewModel : ViewModel()  {
         }
     }
 
+
     // Set user and load their profile
     fun setUser(user: FirebaseUser) {
-        fetchUser(user.uid) // Load profile from Firestore
+        val email = user.email ?: return
+        fetchUser(email) // Load profile from Firestore
         _userProfile.update { current ->
             current?.copy(email = user.email ?: "") ?: UserProfile(
                 uid = user.uid,
@@ -98,17 +96,17 @@ class UserProfileViewModel : ViewModel()  {
                 _error.value = null
                 _updateSuccess.value = false // Reset success status before starting
 
-                val uid = getCurrentUserId()
-                if (uid == null) {
+                val email = getCurrentUserId()  // <- now returns email
+                if (email == null) {
                     _error.value = "No user is logged in"
                     return@launch
                 }
 
                 // Save with correct uID
-                val updatedProfile = profile.copy(uid=uid)
+                val updatedProfile = profile.copy(email=email)
 
                 // Save to DB
-                firestore.collection(userCollection).document(uid).set(updatedProfile).await()
+                firestore.collection(userCollection).document(email).set(updatedProfile).await()
 
                 _userProfile.value = updatedProfile
                 _updateSuccess.value = true  // Set updateSuccess to true after successful save
@@ -129,17 +127,17 @@ class UserProfileViewModel : ViewModel()  {
                 _loading.value = true
                 _error.value = null
 
-                val uid = getCurrentUserId()
-                if (uid == null) {
+                val email = getCurrentUserId()
+                if (email == null) {
                     _error.value = "No user is logged in"
                     return@launch
                 }
 
                 // Save with correct uID
-                val updatedProfile = profile.copy(uid=uid)
+                val updatedProfile = profile.copy(email=email)
 
                 // Save to DB
-                firestore.collection(userCollection).document(uid).set(updatedProfile).await()
+                firestore.collection(userCollection).document(email).set(updatedProfile).await()
 
                 _userProfile.value = updatedProfile
                 // Don't set _updateSuccess to true - this is the key difference
@@ -178,17 +176,17 @@ class UserProfileViewModel : ViewModel()  {
 
     // Delete user profile
     fun deleteUserProfile(onComplete: (Boolean, String?) -> Unit) {
-        val uid = getCurrentUserId()
-        if (uid == null) {
+        val email = getCurrentUserId()
+        if (email == null) {
             onComplete(false, "No user is logged in")
             return
         }
 
-        firestore.collection(userCollection).document(uid)
+        firestore.collection(userCollection).document(email)
             .delete()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    _userProfile.value = UserProfile(uid = uid)
+                    _userProfile.value = UserProfile(email = email)
                     onComplete(true, null)
                 } else {
                     onComplete(false, task.exception?.localizedMessage)

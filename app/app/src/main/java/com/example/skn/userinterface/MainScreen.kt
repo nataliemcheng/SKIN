@@ -1,6 +1,7 @@
 package com.example.skn.userinterface
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,8 @@ import com.example.skn.viewmodel.ProductViewModel
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.example.skn.model.Product
 import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.navigation.AppBottomNavigation
@@ -24,6 +27,7 @@ import com.example.skn.navigation.NavigationTab
 
 @Composable
 fun MainScreen(
+    navController: NavHostController,
     viewModel: ProductViewModel,
     authViewModel: AuthViewModel,
     onSearchClick: () -> Unit,
@@ -96,14 +100,14 @@ fun MainScreen(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(40.dp)
                         ) {
-                            Section("Favorites", favorites, true) { viewModel.toggleFavorite(it) }
-                            Section("Recently Searched", recentlySearched) { viewModel.toggleFavorite(it) }
+                            Section("Favorites", favorites, true, navController = navController,) { viewModel.toggleFavorite(it) }
+                            Section("Recently Searched", recentlySearched, navController = navController,) { viewModel.toggleFavorite(it) }
                         }
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(40.dp)
                         ) {
-                            Section("Popular", popular) { viewModel.toggleFavorite(it) }
+                            Section("Popular", popular, navController = navController,) { viewModel.toggleFavorite(it) }
                             Column {
                                 Text("Discover Tutorials", style = MaterialTheme.typography.titleMedium)
                                 Spacer(Modifier.height(8.dp))
@@ -122,19 +126,19 @@ fun MainScreen(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         item {
-                            Section("Favorites", favorites, true) { viewModel.toggleFavorite(it) }
+                            Section("Favorites", favorites, true, navController = navController,) { viewModel.toggleFavorite(it) }
                         }
                         item {
-                            Section("Recently Searched", recentlySearched) { viewModel.toggleFavorite(it) }
+                            Section("Recently Searched", recentlySearched, navController = navController,) { viewModel.toggleFavorite(it) }
                         }
                         item {
-                            Section("Popular", popular) { viewModel.toggleFavorite(it) }
+                            Section("Popular", popular, navController = navController,) { viewModel.toggleFavorite(it) }
                         }
                         item {
-                            Section("Good for My SKIN", goodForSkin) { viewModel.toggleSkinTag(it, ProductViewModel.TagType.GOOD) }
+                            Section("Good for My SKIN", goodForSkin, navController = navController,) { viewModel.toggleSkinTag(it, ProductViewModel.TagType.GOOD) }
                         }
                         item {
-                            Section("Bad for My SKIN", badForSkin) { viewModel.toggleSkinTag(it,ProductViewModel.TagType.BAD)}
+                            Section("Bad for My SKIN", badForSkin, navController = navController,) { viewModel.toggleSkinTag(it,ProductViewModel.TagType.BAD)}
                         }
                         }
                     }
@@ -151,6 +155,7 @@ fun Section(
     title: String,
     items: List<Product>,
     isFavoriteSection: Boolean = false,
+    navController: NavHostController,
     onToggleFavorite: (Product) -> Unit // ← no question mark
 ) {
     var expandedProduct by remember { mutableStateOf<Product?>(null) }
@@ -167,9 +172,20 @@ fun Section(
                         .padding(4.dp)
                         .clickable {
                             expandedProduct = if (expandedProduct == product) null else product
+                            navController.navigate("product/${product.id}")
                         },
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    product.image_link?.let { imageUrl ->
+                        Image(
+                            painter = rememberAsyncImagePainter(imageUrl),
+                            contentDescription = product.name,
+                            modifier = Modifier
+                                .height(100.dp)
+                                .fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
                     Text(
                         product.name ?: "Unnamed",
                         maxLines = 2,

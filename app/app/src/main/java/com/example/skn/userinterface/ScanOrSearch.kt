@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.skn.viewmodel.ProductViewModel
 import com.example.skn.viewmodel.ChemicalsViewModel
@@ -35,6 +36,7 @@ import com.example.skn.navigation.NavigationTab
 fun ScanOrSearchScreen(
     viewModel: ProductViewModel,
     chemicalsViewModel: ChemicalsViewModel,
+    navController: NavHostController,
     onBackClick: () -> Unit,
     onCreatePostClick: () -> Unit = {},
     onScanClick: () -> Unit = {},
@@ -218,6 +220,9 @@ fun ScanOrSearchScreen(
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
+                                                .clickable {
+                                                    navController.navigate("product/${product.id}")
+                                                }
                                                 .padding(8.dp),
                                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                                             verticalAlignment = Alignment.CenterVertically
@@ -406,6 +411,9 @@ fun ScanOrSearchScreen(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .clickable {
+                                                navController.navigate("product/${product.id}")
+                                            }
                                             .padding(8.dp),
                                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                                         verticalAlignment = Alignment.CenterVertically
