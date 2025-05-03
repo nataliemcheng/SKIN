@@ -196,7 +196,7 @@ fun BarcodeScannerScreen(
                 }
             },
             modifier = Modifier
-                .padding(start = 16.dp, top = 50.dp)
+                .padding(start = 16.dp, top = 80.dp)
                 .align(Alignment.TopStart)
         ) {
             Icon(
@@ -218,7 +218,7 @@ fun BarcodeScannerScreen(
                 onClick = { galleryLauncher.launch("image/*") },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp)
+                    .padding(16.dp, bottom = 50.dp)
             ) {
                 Text("Choose from Gallery")
             }

@@ -21,7 +21,6 @@ enum class NavigationTab {
     SEARCH,
     SCAN,
     PROFILE,
-    CREATE
 }
 
 @Composable

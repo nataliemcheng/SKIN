@@ -26,7 +26,6 @@ fun UserProfileScreen(
     authViewModel: AuthViewModel,
     profileViewModel: UserProfileViewModel,
     onNavigateBack: () -> Unit,
-    onCreatePostClick: () -> Unit = {},
     onScanClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onLogout: () -> Unit = {},
