@@ -1,6 +1,7 @@
 package com.example.skn.userinterface
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,10 +14,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Snackbar
@@ -52,6 +55,7 @@ fun OnBoardingScreen(
     val error by profileViewModel.error.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val totalSteps = 5
     var currentStep by remember { mutableIntStateOf(0) }  // Tracks current onboarding step
 
     // User input states (start empty since it's a new user)
@@ -78,37 +82,60 @@ fun OnBoardingScreen(
             )
         }
     }
-
-    Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (loading) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Saving your profile...", style = MaterialTheme.typography.bodyMedium)
-        } else {
-            when (currentStep) {
-                0 -> WelcomeCard(onNext = { currentStep++ })
-                1 -> NameCard(firstName = firstName, lastName = lastName, onFirstNameChange = { firstName = it }, onLastNameChange = { lastName = it }, onNext = { currentStep++ })
-                2 -> SkinTypeCard(skinType = skinType, onSkinTypeChange = { skinType = it }, onNext = { currentStep++ })
-                3 -> SkinConcernsCard(skinConcerns = skinConcerns, onSkinConcernsChange = { skinConcerns = it },
-                    onFinish = {
-                        profileViewModel.updateProfile(firstName = firstName, lastName = lastName,
-                            skinType = skinType, skinConcerns = skinConcerns
+    Scaffold(
+        topBar ={
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) { LinearProgressIndicator(
+                progress = { (currentStep + 1) / totalSteps.toFloat() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .align(Alignment.BottomCenter)
+                )
+            }
+    }
+    )    { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ){
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+                if (loading) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Saving your profile...", style = MaterialTheme.typography.bodyMedium)
+                } else {
+                    when (currentStep) {
+                        0 -> WelcomeCard(onNext = { currentStep++ })
+                        1 -> NameCard(firstName = firstName, lastName = lastName, onFirstNameChange = { firstName = it }, onLastNameChange = { lastName = it }, onNext = { currentStep++ })
+                        2 -> SkinTypeCard(skinType = skinType, onSkinTypeChange = { skinType = it }, onNext = { currentStep++ })
+                        3 -> SkinConcernsCard(skinConcerns = skinConcerns, onSkinConcernsChange = { skinConcerns = it },
+                            onFinish = {
+                                profileViewModel.updateProfile(firstName = firstName, lastName = lastName,
+                                    skinType = skinType, skinConcerns = skinConcerns
+                                )
+                                currentStep++
+                            }
                         )
-                        currentStep++
                     }
+                }
+
+                // Snackbar for errors
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.padding(16.dp)
                 )
             }
         }
-
-        // Snackbar for errors
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.padding(16.dp)
-        )
     }
 }
 

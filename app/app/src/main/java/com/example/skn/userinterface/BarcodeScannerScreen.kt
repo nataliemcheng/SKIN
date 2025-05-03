@@ -218,7 +218,7 @@ fun BarcodeScannerScreen(
                 onClick = { galleryLauncher.launch("image/*") },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(16.dp, bottom = 50.dp)
+                    .padding(32.dp)
             ) {
                 Text("Choose from Gallery")
             }
