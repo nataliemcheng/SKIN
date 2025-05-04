@@ -13,7 +13,9 @@ import com.google.firebase.ktx.Firebase
 import android.util.Log
 import com.example.skn.api.UPCItemApiClient
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.Query
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.async
 import kotlinx.coroutines.tasks.await
 
 
@@ -159,10 +161,10 @@ class ProductViewModel : ViewModel() {
                     }
                     batch.commit()
                         .addOnSuccessListener {
-                            Log.d("Firestore", "✅ All products saved to Firestore")
+                            Log.d("Firestore", "All products saved to Firestore")
                         }
                         .addOnFailureListener {
-                            Log.e("Firestore", "❌ Failed to save products to Firestore", it)
+                            Log.e("Firestore", "Failed to save products to Firestore", it)
                         }
 
                 } else {
@@ -176,43 +178,62 @@ class ProductViewModel : ViewModel() {
         }
     }
 
-    fun searchProducts(
-        productType: String? = null,
-        productCategory: String? = null,
-        productTags: String? = null,
-        brand: String? = null,
-        priceGreaterThan: Float? = null,
-        priceLessThan: Float? = null,
-        ratingGreaterThan: Float? = null,
-        ratingLessThan: Float? = null
-    ) {
+    fun searchProducts(userSearch: String) {
         _loading.value = true
+
+        val query = userSearch.trim().lowercase()
+
         viewModelScope.launch {
             try {
-                val response = MakeupApiClient.api.searchProducts(
-                    productType = productType,
-                    productCategory = productCategory,
-                    productTags = productTags,
-                    brand = brand,
-                    priceGreaterThan = priceGreaterThan,
-                    priceLessThan = priceLessThan,
-                    ratingGreaterThan = ratingGreaterThan,
-                    ratingLessThan = ratingLessThan
-                )
-                if (response.isSuccessful) {
-                    val result = response.body() ?: emptyList()
-                    _products.value = result
-                    _recentlySearched.value = (_recentlySearched.value + result).distinctBy { it.id }.takeLast(10)
-
-                    // ✅ Log the first matched product's brand, type, and id
-                    result.firstOrNull()?.let { product ->
-                        logSearchQueryToFirebase(product)
-                    }
-
-                    _error.value = null
-                } else {
-                    _error.value = "Error: ${response.message()}"
+                // search the query with brand, productType, productTags, and productCategory (has to be separate searches because of AND search)
+                val brandDeferred = async {
+                    MakeupApiClient.api.searchProducts(
+                        brand = query,
+                        productType = null, productTags = null, productCategory = null, priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
+                    )
                 }
+                val typeDeferred = async {
+                    MakeupApiClient.api.searchProducts(
+                        productType = query,
+                        brand = null, productCategory = null, productTags = null, priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
+                    )
+                }
+                val tagDeferred = async {
+                    MakeupApiClient.api.searchProducts(
+                        productTags = query,
+                        brand = null, productType = null, productCategory = null, priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
+                    )
+                }
+                val categoryDeferred = async {
+                    MakeupApiClient.api.searchProducts(
+                        productCategory = query,
+                        brand = null, productType = null, productTags = null, priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
+                    )
+                }
+
+                val brandResponse = brandDeferred.await()
+                val typeResponse = typeDeferred.await()
+                val tagResponse = tagDeferred.await()
+                val categoryResponse = categoryDeferred.await()
+
+                val results = mutableListOf<Product>()
+
+                if (brandResponse.isSuccessful) results += brandResponse.body().orEmpty()
+                if (typeResponse.isSuccessful) results += typeResponse.body().orEmpty()
+                if (tagResponse.isSuccessful) results += tagResponse.body().orEmpty()
+                if (categoryResponse.isSuccessful) results += categoryResponse.body().orEmpty()
+
+                val distinctResults = results.distinctBy { it.id }
+
+                _products.value = distinctResults
+                _recentlySearched.value = (_recentlySearched.value + distinctResults).distinctBy { it.id }.takeLast(10)
+
+                distinctResults.firstOrNull()?.let { product ->
+                    logSearchQueryToFirebase(product)
+                }
+
+                _error.value = if (distinctResults.isEmpty()) "No products found for '$query'" else null
+
             } catch (e: Exception) {
                 _error.value = "Exception: ${e.localizedMessage}"
             } finally {
@@ -220,6 +241,7 @@ class ProductViewModel : ViewModel() {
             }
         }
     }
+
 
     private fun getCurrentUserId(): String? {
         return FirebaseAuth.getInstance().currentUser?.email
@@ -261,7 +283,7 @@ class ProductViewModel : ViewModel() {
         db.collection("user_activity")
             .document(userId)
             .collection("search_history")
-            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
             .limit(10)
             .get()
             .addOnSuccessListener { result ->
@@ -307,11 +329,11 @@ class ProductViewModel : ViewModel() {
                     doc.toObject(Product::class.java)
                 }
                 _products.value = productList
-                Log.d("Firestore", "✅ Loaded ${productList.size} products from Firestore")
+                Log.d("Firestore", "Loaded ${productList.size} products from Firestore")
             }
             .addOnFailureListener {
                 _error.value = "Failed to load products from Firestore"
-                Log.e("Firestore", "❌ Error loading products", it)
+                Log.e("Firestore", "Error loading products", it)
             }
             .addOnCompleteListener {
                 _loading.value = false
@@ -379,13 +401,13 @@ class ProductViewModel : ViewModel() {
                     // Firestore check (if you have logic to verify brand match, etc)
                     item.brand?.let { brand ->
                         val exists = checkFirestoreForBrand(brand)
-                    if (exists) {
-                        _scannedProduct.value = product
-                    } else {
-                        _scannedProduct.value = null
-                        _error.value = "Product not in database"
+                        if (exists) {
+                            _scannedProduct.value = product
+                        } else {
+                            _scannedProduct.value = null
+                            _error.value = "Product not in database"
+                        }
                     }
-                }
                 } else {
                     _scannedProduct.value = null
                     _error.value = "No product found for this UPC"
@@ -457,6 +479,4 @@ class ProductViewModel : ViewModel() {
     fun logSearchManually(it: Any) {
 
     }
-
 }
-

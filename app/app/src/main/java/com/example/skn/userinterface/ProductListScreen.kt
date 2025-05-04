@@ -47,17 +47,17 @@ fun ProductListScreen(viewModel: ProductViewModel) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = {
-                viewModel.searchProducts(
-                    brand = brand.ifBlank { null },
-                    productType = productType.ifBlank { null }
-                )
-            },
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Text("Search")
-        }
+//        Button(
+//            onClick = {
+//                viewModel.searchProducts(
+//                    brand = brand.ifBlank { null },
+//                    productType = productType.ifBlank { null }
+//                )
+//            },
+//            modifier = Modifier.align(Alignment.End)
+//        ) {
+//            Text("Search")
+//        }
 
         Spacer(modifier = Modifier.height(16.dp))
 

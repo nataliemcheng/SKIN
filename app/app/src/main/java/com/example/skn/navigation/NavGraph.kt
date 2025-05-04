@@ -63,10 +63,6 @@ fun AppNavGraph(
         navController.navigate("profile")
     }
 
-    val navigateToCreatePost = {
-        // TODO: Implement your create post screen navigation
-    }
-
     val performLogout = {
         navController.navigate("login") {
             popUpTo("main") { inclusive = true }  // so user can't go back
