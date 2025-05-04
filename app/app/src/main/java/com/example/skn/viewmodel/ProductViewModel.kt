@@ -39,7 +39,7 @@ class ProductViewModel : ViewModel() {
     private val _favoriteProducts = MutableStateFlow<List<Product>>(emptyList())
     val favoriteProducts: StateFlow<List<Product>> = _favoriteProducts
 
-    enum class TagType { GOOD, BAD }
+    enum class TagType { GOOD, BAD, NONE }
     private val _skinTags = MutableStateFlow<Map<Int, TagType>>(emptyMap())
     val skinTags: StateFlow<Map<Int, TagType>> = _skinTags
 
