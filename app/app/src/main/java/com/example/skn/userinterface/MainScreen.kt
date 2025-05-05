@@ -2,6 +2,7 @@ package com.example.skn.userinterface
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
 import com.example.skn.viewmodel.ProductViewModel
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -99,10 +101,12 @@ fun MainScreen(
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(40.dp)
+
                         ) {
                             Section("Favorites", favorites, true, navController = navController,) { viewModel.toggleFavorite(it) }
                             Section("Recently Searched", recentlySearched, navController = navController,) { viewModel.toggleFavorite(it) }
                         }
+                        VerticalDivider()
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(40.dp)
@@ -243,5 +247,19 @@ fun DropdownMenuButton(onLogout: () -> Unit) {
             )
         }
     }
+}
+
+@Composable
+fun VerticalBorder (
+    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+    thickness: Dp = 1.dp,
+    modifier: Modifier = Modifier
+    ){
+    Box(
+        modifier
+            .fillMaxHeight()
+            .width(thickness)
+            .background(color)
+    )
 }
 
