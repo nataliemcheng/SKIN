@@ -11,6 +11,7 @@ data class Product(
     val product_link: String? = null,
     val website_link: String? = null,
     val description: String? = null,
+    val ingredients: String? = null,
     val rating: Float? = null,
     val category: String? = null,
     val product_type: String? = null,

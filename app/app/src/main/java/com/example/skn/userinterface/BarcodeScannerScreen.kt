@@ -13,7 +13,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -76,7 +78,9 @@ fun BarcodeScannerScreen(
                     result?.let {
                         if (scannedBarcode != it) {
                             scannedBarcode = it
-                            viewModel.fetchProductFromUpc(it)
+                            Log.d("BarcodeScanner", "Scanned from gallery: $it")
+
+                            viewModel.checkIfProductIsPending(it)
                             showSheet = true
                             isScanningDone = true
                         }
@@ -130,7 +134,7 @@ fun BarcodeScannerScreen(
                                         val code = barcodes.firstOrNull()?.rawValue
                                         if (!code.isNullOrBlank() && scannedBarcode != code) {
                                             scannedBarcode = code
-                                            viewModel.fetchProductFromUpc(code)
+                                            viewModel.checkIfProductIsPending(code)
                                             showSheet = true
                                             isScanningDone = true
                                         }
@@ -230,53 +234,80 @@ fun BarcodeScannerScreen(
                 sheetState = sheetState
             )
             {
-                LaunchedEffect(scannedProduct) {
-                    Log.d("BarcodeScanner", "Scanned Product: $scannedProduct")
-                }
-                if (scannedProduct != null) {
-                    val product = scannedProduct!!
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("✅ Product Found", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(8.dp))
-                        Text(product.name ?: "No name")
-                        Text(product.description ?: "No description")
-                        Spacer(Modifier.height(8.dp))
-                        product.image_link?.let {
-                            Image(
-                                painter = rememberAsyncImagePainter(it),
-                                contentDescription = null,
-                                modifier = Modifier.size(100.dp)
-                            )
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        Button(onClick = { showSheet = false }) {
-                            Text("Close")
-                        }
-                    }
-                } else if (error != null) {
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("❌ Product not found", color = Color.Red)
-                        Spacer(Modifier.height(8.dp))
-                        Button(onClick = {
-                            scannedBarcode?.let { barcode ->
-                                navController.navigate("submitProduct/${Uri.encode(barcode)}")
-                            }
-                        }) {
-                            Text("Submit Product Info")
-                        }
-                    }
-                }
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    if (scannedProduct != null) {
+                        val product = scannedProduct!!
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Text("✅ Product Found", style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.height(12.dp))
 
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                product.image_link?.let {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(it),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .padding(end = 16.dp)
+                                    )
+                                }
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        if (product.brand.isNullOrBlank()) "No brand" else product.brand,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        if (product.name.isNullOrBlank()) "No name" else product.name,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        if (product.description.isNullOrBlank()) "No description" else product.description,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(16.dp))
+                            Button(
+                                onClick = { showSheet = false },
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            ) {
+                                Text("Close")
+                            }
+                        }
+                    } else if (error != null) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("❌ Product not found", color = Color.Red)
+                            Spacer(Modifier.height(8.dp))
+                            Button(onClick = {
+                                scannedBarcode?.let { barcode ->
+                                    navController.navigate("submitProduct/${Uri.encode(barcode)}")
+                                }
+                            }) {
+                                Text("Submit Product Info")
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -184,7 +184,8 @@ fun AppNavGraph(
             SubmitProductFormScreen(
                 navController = navController,
                 barcode = barcode,
-                onSubmit = { name, brand, description, ingredients, frontUri, backUri, upc ->
+                viewModel = productViewModel,
+                onSubmit = { name, brand, description, ingredients, frontUri, upc ->
                     // Use a coroutine for Firebase calls
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
@@ -194,7 +195,6 @@ fun AppNavGraph(
                                 description = description,
                                 ingredients = ingredients,
                                 frontUri = frontUri,
-                                backUri = backUri,
                                 barcode = upc
                             )
                             withContext(Dispatchers.Main) {

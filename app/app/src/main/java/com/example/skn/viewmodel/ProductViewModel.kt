@@ -538,49 +538,61 @@ class ProductViewModel : ViewModel() {
             .delete()
     }
 
-    fun fetchProductFromUpc(upc: String) {
+    fun checkIfProductIsPending(barcode: String) {
         viewModelScope.launch {
             try {
-                val response = UPCItemApiClient.api.lookupUPC(upc)
+                val snapshot = Firebase.firestore.collection("pending_products")
+                    .document(barcode)
+                    .get()
+                    .await()
+
+                if (snapshot.exists()) {
+                    val product = Product(
+                        name = snapshot.getString("name"),
+                        brand = snapshot.getString("brand"),
+                        description = snapshot.getString("description"),
+                        ingredients = snapshot.getString("ingredients"),
+                        image_link = snapshot.getString("front_image_url") // optional
+                    )
+
+                    _scannedProduct.value = product
+                    _error.value = null
+                } else {
+                    _scannedProduct.value = null
+                    _error.value = "Product not in pending database"
+                }
+            } catch (e: Exception) {
+                _scannedProduct.value = null
+                _error.value = "Error checking Firestore: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun prefillProductInfoFromUPC(barcode: String, onResult: (Product?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = UPCItemApiClient.api.lookupUPC(barcode)
                 val item = response.items.firstOrNull()
 
-                if (item != null ) {
+                if (item != null) {
                     val product = Product(
                         name = item.title,
                         brand = item.brand,
                         description = item.description,
                         image_link = item.images?.firstOrNull()
                     )
-
-                    // Firestore check (if you have logic to verify brand match, etc)
-                    item.brand?.let { brand ->
-                        val exists = checkFirestoreForBrand(brand)
-                        if (exists) {
-                            _scannedProduct.value = product
-                        } else {
-                            _scannedProduct.value = null
-                            _error.value = "Product not in database"
-                        }
-                    }
+                    onResult(product)
                 } else {
-                    _scannedProduct.value = null
-                    _error.value = "No product found for this UPC"
+                    onResult(null)
                 }
             } catch (e: Exception) {
-                _scannedProduct.value = null
-                _error.value = e.localizedMessage
+                Log.e("UPC Lookup", "Error: ${e.localizedMessage}", e)
+                onResult(null)
             }
         }
     }
 
-    private suspend fun checkFirestoreForBrand(brand: String): Boolean {
-        val snapshot = Firebase.firestore.collection("all_products")
-            .whereEqualTo("brand", brand)
-            .get()
-            .await()
 
-        return !snapshot.isEmpty
-    }
 
     suspend fun submitProductToFirestore(
         name: String,
@@ -588,7 +600,6 @@ class ProductViewModel : ViewModel() {
         description: String,
         ingredients: String,
         frontUri: Uri?,
-        backUri: Uri?,
         barcode: String
     ) {
         val storage = Firebase.storage
@@ -603,22 +614,20 @@ class ProductViewModel : ViewModel() {
 
         // Upload front image
         frontUri?.let {
-            val frontRef = storage.reference.child("products/${barcode}_front.jpg")
-            frontRef.putFile(it).await()
-            val frontUrl = frontRef.downloadUrl.await().toString()
-            productData["front_image_url"] = frontUrl
+            if (it.scheme == "content" || it.scheme == "file") {
+                val frontRef = storage.reference.child("products/${barcode}_front.jpg")
+                frontRef.putFile(it).await()
+                val frontUrl = frontRef.downloadUrl.await().toString()
+                productData["front_image_url"] = frontUrl
+            } else {
+                // It's probably a remote URL (from UPC API) – just store it directly
+                productData["front_image_url"] = it.toString()
+            }
         }
 
-        // Upload back image
-        backUri?.let {
-            val backRef = storage.reference.child("products/${barcode}_back.jpg")
-            backRef.putFile(it).await()
-            val backUrl = backRef.downloadUrl.await().toString()
-            productData["back_image_url"] = backUrl
-        }
 
         // Save to Firestore
-        firestore.collection("pending_products")  // Or "all_products"
+        firestore.collection("pending_products")
             .document(barcode)
             .set(productData)
             .await()
