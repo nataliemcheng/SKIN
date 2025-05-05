@@ -24,10 +24,11 @@ fun IngredientResults(
             Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(chemical.chemicalName ?: "Unknown Chemical", style = MaterialTheme.typography.bodyLarge)
-                    chemical.casNumber?.let { Text("CAS No: $it", style = MaterialTheme.typography.bodySmall) }
-                    chemical.brandName?.let { Text("Brand: $it", style = MaterialTheme.typography.bodySmall) }
-                    chemical.productName?.let { Text("Product: $it", style = MaterialTheme.typography.bodySmall) }
+//                    Text(chemical.chemicalName ?: "Unknown Chemical", style = MaterialTheme.typography.bodyLarge)
+
+                    chemical.productName?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
+                    chemical.brandName?.let { Text("Brand: $it", style = MaterialTheme.typography.bodyMedium) }
+                    chemical.chemicalName?.let { Text("Chemicals found: $it", style = MaterialTheme.typography.bodySmall)}
                 }
             }
         }

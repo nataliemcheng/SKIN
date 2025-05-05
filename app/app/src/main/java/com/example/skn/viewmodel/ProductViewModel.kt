@@ -182,48 +182,110 @@ class ProductViewModel : ViewModel() {
         _loading.value = true
 
         val query = userSearch.trim().lowercase()
+        val isLikelyIngredient = isLikelyIngredientSearch(query)
 
         viewModelScope.launch {
             try {
-                // search the query with brand, productType, productTags, and productCategory (has to be separate searches because of AND search)
-                val brandDeferred = async {
-                    MakeupApiClient.api.searchProducts(
-                        brand = query,
-                        productType = null, productTags = null, productCategory = null, priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
-                    )
-                }
-                val typeDeferred = async {
-                    MakeupApiClient.api.searchProducts(
-                        productType = query,
-                        brand = null, productCategory = null, productTags = null, priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
-                    )
-                }
-                val tagDeferred = async {
-                    MakeupApiClient.api.searchProducts(
-                        productTags = query,
-                        brand = null, productType = null, productCategory = null, priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
-                    )
-                }
-                val categoryDeferred = async {
-                    MakeupApiClient.api.searchProducts(
-                        productCategory = query,
-                        brand = null, productType = null, productTags = null, priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
-                    )
-                }
-
-                val brandResponse = brandDeferred.await()
-                val typeResponse = typeDeferred.await()
-                val tagResponse = tagDeferred.await()
-                val categoryResponse = categoryDeferred.await()
-
+                // If it looks like an ingredient search and we want to prioritize getting all products
+                // to search through descriptions, we can skip API calls or modify the flow here
                 val results = mutableListOf<Product>()
 
-                if (brandResponse.isSuccessful) results += brandResponse.body().orEmpty()
-                if (typeResponse.isSuccessful) results += typeResponse.body().orEmpty()
-                if (tagResponse.isSuccessful) results += tagResponse.body().orEmpty()
-                if (categoryResponse.isSuccessful) results += categoryResponse.body().orEmpty()
+                // For likely ingredients, we fetch all products right away for thorough searching
+                if (isLikelyIngredient) {
+                    Log.d("Search", "Likely ingredient search for: $query")
+                    val allProductsResponse = MakeupApiClient.api.getAllProducts()
+                    if (allProductsResponse.isSuccessful) {
+                        results += allProductsResponse.body().orEmpty()
+                        Log.d("Search", "Got ${results.size} products from API to search for ingredient")
+                    } else {
+                        // API fallback to Firestore
+                        val db = Firebase.firestore
+                        val firestoreProducts = db.collection("all_products")
+                            .get()
+                            .await()
+                            .toObjects(Product::class.java)
+                        results += firestoreProducts
+                        Log.d("Search", "Got ${firestoreProducts.size} products from Firestore to search for ingredient")
+                    }
+                } else {
+                    // Regular search via API for non-ingredient queries
+                    val brandDeferred = async {
+                        MakeupApiClient.api.searchProducts(
+                            brand = query,
+                            productType = null, productTags = null, productCategory = null,
+                            priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
+                        )
+                    }
+                    val typeDeferred = async {
+                        MakeupApiClient.api.searchProducts(
+                            productType = query,
+                            brand = null, productCategory = null, productTags = null,
+                            priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
+                        )
+                    }
+                    val tagDeferred = async {
+                        MakeupApiClient.api.searchProducts(
+                            productTags = query,
+                            brand = null, productType = null, productCategory = null,
+                            priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
+                        )
+                    }
+                    val categoryDeferred = async {
+                        MakeupApiClient.api.searchProducts(
+                            productCategory = query,
+                            brand = null, productType = null, productTags = null,
+                            priceGreaterThan = null, priceLessThan = null, ratingGreaterThan = null, ratingLessThan = null
+                        )
+                    }
+
+                    val brandResponse = brandDeferred.await()
+                    val typeResponse = typeDeferred.await()
+                    val tagResponse = tagDeferred.await()
+                    val categoryResponse = categoryDeferred.await()
+
+                    if (brandResponse.isSuccessful) results += brandResponse.body().orEmpty()
+                    if (typeResponse.isSuccessful) results += typeResponse.body().orEmpty()
+                    if (tagResponse.isSuccessful) results += tagResponse.body().orEmpty()
+                    if (categoryResponse.isSuccessful) results += categoryResponse.body().orEmpty()
+
+                    // If standard search found nothing, try getting all products as a fallback
+                    if (results.isEmpty()) {
+                        val allProductsResponse = MakeupApiClient.api.getAllProducts()
+                        if (allProductsResponse.isSuccessful) {
+                            results += allProductsResponse.body().orEmpty()
+                        } else {
+                            // If the API call fails, try to get products from Firestore
+                            val db = Firebase.firestore
+                            val firestoreProducts = db.collection("all_products")
+                                .get()
+                                .await()
+                                .toObjects(Product::class.java)
+                            results += firestoreProducts
+                        }
+                    }
+                }
 
                 val distinctResults = results.distinctBy { it.id }
+                    .filter { product ->
+                        // Basic field search
+                        product.name?.lowercase()?.contains(query) == true ||
+                                product.brand?.lowercase()?.contains(query) == true ||
+                                product.product_type?.lowercase()?.contains(query) == true ||
+                                product.category?.lowercase()?.contains(query) == true ||
+                                product.tag_list?.any { it.lowercase().contains(query) } == true ||
+
+                                // Enhanced description search for ingredients
+                                if (isLikelyIngredient) {
+                                    // More thorough description parsing for ingredients
+                                    searchDescriptionForIngredient(product.description, query)
+                                } else {
+                                    // Simple description search for non-ingredients
+                                    product.description?.lowercase()?.contains(query) == true
+                                }
+                    }
+
+                // Log search results
+                Log.d("Search", "Found ${distinctResults.size} results for query: $query")
 
                 _products.value = distinctResults
                 _recentlySearched.value = (_recentlySearched.value + distinctResults).distinctBy { it.id }.takeLast(10)
@@ -235,11 +297,103 @@ class ProductViewModel : ViewModel() {
                 _error.value = if (distinctResults.isEmpty()) "No products found for '$query'" else null
 
             } catch (e: Exception) {
+                Log.e("Search", "Error searching for $query", e)
                 _error.value = "Exception: ${e.localizedMessage}"
             } finally {
                 _loading.value = false
             }
         }
+    }
+
+    // Determines if a search query is likely to be an ingredient name
+    private fun isLikelyIngredientSearch(query: String): Boolean {
+        // Common ingredient keywords
+        val ingredientTerms = listOf(
+            "acid", "extract", "oil", "butter", "powder", "sodium", "zinc", "oxide",
+            "vitamin", "water", "glycerin", "alcohol", "fragrance", "parfum",
+            "extract", "seed", "fruit", "leaf", "root", "stem", "flower", "petal",
+            "wax", "resin", "clay", "salt", "protein"
+        )
+
+        // Check if query contains common ingredient suffixes or terms
+        return query.contains(" ").not() && // Single word is more likely an ingredient
+                (ingredientTerms.any { query.contains(it) } || // Contains ingredient term
+                        commonIngredientNames.any { it.equals(query, ignoreCase = true) }) // Is a common ingredient
+    }
+
+    // Common skincare/makeup ingredients (to make exact matching more efficient)
+    private val commonIngredientNames = listOf(
+        "water", "aqua", "glycerin", "titanium dioxide", "mica", "talc", "silica",
+        "iron oxide", "dimethicone", "tocopherol", "parfum", "fragrance", "benzyl",
+        "citral", "limonene", "linalool", "glycol", "propylene", "shea butter",
+        "coconut oil", "jojoba oil", "argan oil", "aloe vera", "hyaluronic acid",
+        "retinol", "niacinamide", "peptide", "ceramide", "squalane", "panthenol",
+        "zinc oxide", "salicylic acid", "lactic acid", "glycolic acid"
+    )
+
+    // Enhanced description search specifically for ingredient mentions
+    private fun searchDescriptionForIngredient(description: String?, query: String): Boolean {
+        if (description == null) return false
+
+        val desc = description.lowercase()
+
+        // Early return for direct match
+        if (desc.contains(query)) return true
+
+        // More advanced ingredient extraction techniques
+
+        // 1. Look for explicit ingredient listings
+        val ingredientSectionMarkers = listOf(
+            "ingredients:", "ingredients include:", "contains:", "composition:",
+            "ingredient list:", "formulated with:", "ingredients list:", "made with:"
+        )
+
+        for (marker in ingredientSectionMarkers) {
+            val index = desc.indexOf(marker)
+            if (index >= 0) {
+                val ingredientSection = desc.substring(index + marker.length)
+
+                // Check for ingredient within common ingredient list delimiters
+                val ingredients = ingredientSection.split(",", ";", "•", ".", "&amp;", "&").map { it.trim() }
+                if (ingredients.any { it.contains(query) }) {
+                    return true
+                }
+            }
+        }
+
+        // 2. Look for ingredients mentioned in product highlights
+        val wordList = desc.split(" ", "\n", "\t").map { it.trim() }
+        val queryWords = query.split(" ")
+
+        // Check for contiguous matching words
+        for (i in 0 until wordList.size - queryWords.size + 1) {
+            var match = true
+            for (j in queryWords.indices) {
+                if (!wordList[i + j].contains(queryWords[j])) {
+                    match = false
+                    break
+                }
+            }
+            if (match) return true
+        }
+
+        // 3. Check for ingredient mentioned near product benefit terms
+        val benefitTerms = listOf(
+            "infused with", "enriched with", "contains", "with", "featuring",
+            "includes", "enhanced with", "fortified with", "powered by"
+        )
+
+        for (term in benefitTerms) {
+            val index = desc.indexOf(term)
+            if (index >= 0) {
+                val followingText = desc.substring(index + term.length, (index + term.length + 50).coerceAtMost(desc.length))
+                if (followingText.contains(query)) {
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 
 
