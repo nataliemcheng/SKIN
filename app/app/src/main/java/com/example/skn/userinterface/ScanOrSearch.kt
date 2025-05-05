@@ -96,63 +96,41 @@ fun ScanOrSearchScreen(
         ) {
             // Landscape mode
             if (isTabletLandscape) {
+                Spacer(Modifier.height(16.dp))
                 Row(
                     modifier = modifier
                         .fillMaxSize()
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Left pane: search + scan UI (make it scrollable if content grows)
+                    // Left pane: search + scan UI
                     Column(
                         modifier = Modifier
                             .weight(1f)
                             .verticalScroll(rememberScrollState())
+                            .padding(8.dp)
+                        
                     ) {
-                        // — Header Buttons —
-                        Row(
+                        Spacer(Modifier.height(24.dp))
+
+                        OutlinedTextField(value = userSearch,
+                            onValueChange = { userSearch = it },
+                            placeholder = { Text("Search a brand, product, or ingredient") },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 30.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Button(onClick = onBackClick) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                                Text("Back to Feed")
-                            }
-                        }
-
+                                .height(56.dp),
+                        )
                         Spacer(Modifier.height(16.dp))
 
-                        // — Search Inputs —
-                        Text("Search here", style = MaterialTheme.typography.titleMedium)
-                        OutlinedTextField(
-                            value = brand,
-                            onValueChange = { brand = it },
-                            label = { Text("Brand") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        OutlinedTextField(
-                            value = productType,
-                            onValueChange = { productType = it },
-                            label = { Text("Product") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(Modifier.height(8.dp))
-//                        Button(onClick = {
-//                            if (brand.isNotBlank() || productType.isNotBlank()) {
-//                                viewModel.searchProducts( // search in Makeup Api
-//                                    brand = brand.ifBlank { null },
-//                                    productType = productType.ifBlank { null }
-//                                )
-//                            }
-//                            val searchQuery = "$brand $productType" // search in ChemicalAPI
-//                            if (searchQuery.isNotBlank()) {
-//                                chemicalsViewModel.searchChemicals(searchQuery)
-//                            }
-//                        }) {
-//                            Text("Search")
-//                        }
+                        Button(onClick = {
+                            val searchQuery = userSearch.trim()
+                            if (searchQuery.isNotBlank()) {
+                                viewModel.searchProducts(searchQuery)
+                                chemicalsViewModel.searchChemicals(searchQuery)
+                            }
+                        }) {
+                            Text("Go")
+                        }
 
                         Spacer(Modifier.height(24.dp))
                     }
@@ -163,120 +141,44 @@ fun ScanOrSearchScreen(
                             .weight(1f)
                             .fillMaxHeight()
                     ) {
-                        Text("Results", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(8.dp))
+                        if (resultsLoading) {
+                            CircularProgressIndicator()
+                        } else {
+                            if (productsError != null) { Text("Product error: $productsError", color = MaterialTheme.colorScheme.error) }
+                            if (chemicalsError != null) { Text("Ingredients error: $chemicalsError", color = MaterialTheme.colorScheme.error) }
+                            if (products.isEmpty() && chemicals.isEmpty()) { Text("No results found.") }
+                        }
 
-                        when {
-                            productsLoading -> CircularProgressIndicator()
-                            productsError != null -> Text("productsError: $productsError", color = MaterialTheme.colorScheme.error)
-                            products.isEmpty() -> Text("No results found.")
-                            else -> {
-                                val harmfulIngredients = listOf("parabens", "paraben", "phthalates", "sulfates", "formaldehyde", "triclosan", "fragrance", "alcohol", "silicones", "oxybenzone", "toluene", "PFAS", "dye")
-                                val beneficialIngredients = listOf("hyaluronic acid", "niacinamide", "vitamin C", "vitamin E", "vitamin A", "retinol", "glycolic acid", "salicylic acid", "ceramides", "peptides", "AHA", "BHA", "vegan", "free from")
-                                val favoriteProducts by viewModel.favoriteProducts.collectAsState()
-                                val skinTags         by viewModel.skinTags.collectAsState()
+                        val tabs = listOf("Products", "Ingredients")
+                        var selectedTabIndex by remember { mutableStateOf(0) }
 
-                                LazyColumn(
-                                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    items(products) { product ->
-                                        val tags = product.tag_list?.map { it.lowercase() } ?: emptyList()
-                                        val description = product.description?.lowercase() ?: ""
-
-                                        val containsHarmful =
-                                            tags.any { it in harmfulIngredients.map { h -> h.lowercase() } } ||
-                                                    harmfulIngredients.any { it in description }
-
-                                        val containsBeneficial =
-                                            tags.any { it in beneficialIngredients.map { b -> b.lowercase() } } ||
-                                                    beneficialIngredients.any { it in description }
-
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable {
-                                                    navController.navigate("product/${product.id}")
-                                                }
-                                                .padding(8.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Image(
-                                                painter = rememberAsyncImagePainter(product.image_link),
-                                                contentDescription = null,
-                                                modifier = Modifier
-                                                    .size(100.dp)
-                                                    .border(1.dp, Color.LightGray)
-                                            )
-
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    product.name ?: "Unnamed Product",
-                                                    style = MaterialTheme.typography.titleMedium
-                                                )
-
-                                                Text(
-                                                    text = when {
-                                                        containsHarmful -> "This product might be harmful ❌"
-                                                        containsBeneficial -> "This product is beneficial 🌿"
-                                                        else -> "This product is neutral"
-                                                    },
-                                                    color = when {
-                                                        containsHarmful -> Color.Red
-                                                        containsBeneficial -> Color.Green
-                                                        else -> Color.Blue
-                                                    }
-                                                )
-
-                                                Text(
-                                                    product.description
-                                                        ?: "No description available"
-                                                )
-                                            }
-                                            Column {
-
-                                            }
-                                        }
-
-                                        HorizontalDivider()
-                                    }
-                                }
+                        TabRow(selectedTabIndex = selectedTabIndex,
+                            indicator = { tabPositions -> // Indicator for the selected tab
+                                SecondaryIndicator(
+                                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                                    color = Color.DarkGray
+                                )
+                            }) {
+                            tabs.forEachIndexed { index, title ->
+                                Tab(text = { Text(title) }, selected = selectedTabIndex == index, onClick = { selectedTabIndex = index })
                             }
                         }
 
-                        Spacer(Modifier.height(24.dp))
+                        val favoriteProducts by viewModel.favoriteProducts.collectAsState()
+                        val skinTags by viewModel.skinTags.collectAsState()
 
-                        Text("Ingredients Found", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(8.dp))
-
-                        when {
-                            chemicalsLoading -> CircularProgressIndicator()
-                            chemicalsError != null -> Text("Error loading ingredients: $chemicalsError", color = MaterialTheme.colorScheme.error)
-                            chemicals.isEmpty() -> Text("No ingredients found.")
-                            else -> {
-                                LazyColumn(
-                                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    items(chemicals) { chemical ->
-                                        Column(modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(8.dp)
-                                        ) {
-                                            Text(chemical.chemicalName ?: "Unknown Chemical", style = MaterialTheme.typography.bodyLarge)
-                                            chemical.casNumber?.let { cas ->
-                                                Text("CAS No: $cas", style = MaterialTheme.typography.bodySmall)
-                                            }
-                                            chemical.brandName?.let {
-                                                Text("Brand: $it", style = MaterialTheme.typography.bodySmall)
-                                            }
-                                        }
-                                        HorizontalDivider()
-                                    }
-                                }
-                            }
+                        when (selectedTabIndex) {
+                            0 -> if (products.isNotEmpty()) ProductResults(
+                                products = products,
+                                favorites = favoriteProducts,
+                                skinTags = skinTags,
+                                onToggleFavorite = { product -> viewModel.toggleFavorite(product) },
+                                onToggleTag = { product, tagType -> viewModel.toggleSkinTag(product, tagType) },
+                                navController = navController)
+                            1 -> if (chemicals.isNotEmpty()) IngredientResults(chemicals)
                         }
+
+
                     }
                 }
             }
@@ -349,110 +251,6 @@ fun ScanOrSearchScreen(
                     }
 
 
-//                    if (products.isNotEmpty()) {
-//                        // favorites and good/bad tags on side bar
-//                        val favoriteProducts by viewModel.favoriteProducts.collectAsState()
-//                        val skinTags by viewModel.skinTags.collectAsState()
-//
-//                        LazyColumn(
-//                            verticalArrangement = Arrangement.spacedBy(16.dp),
-//                            modifier = Modifier.fillMaxHeight()
-//                        ) {
-//                            // display each product
-//                            items(products) { product ->
-//                                Row(modifier = Modifier.fillMaxWidth().padding(8.dp)
-//                                        .clickable { navController.navigate("product/${product.id}") },
-//                                    horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically
-//                                ) {
-//                                    // display product image if available
-//                                    Image(
-//                                        painter = rememberAsyncImagePainter(product.image_link),
-//                                        contentDescription = null,
-//                                        modifier = Modifier.size(100.dp)
-//                                            .border(1.dp, Color.LightGray)
-//                                    )
-//
-//                                    // display product name and description if available
-//                                    Column(modifier = Modifier.weight(1f)) {
-//                                        Text(
-//                                            product.name ?: "Unnamed Product",
-//                                            style = MaterialTheme.typography.titleMedium
-//                                        )
-//                                        Text(product.description ?: "No description available")
-//                                    }
-//                                    Column(
-//                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-//                                        horizontalAlignment = Alignment.CenterHorizontally
-//                                    )
-//                                    {
-//                                        IconButton(onClick = { viewModel.toggleFavorite(product) }) {
-//                                            val isFavorited = favoriteProducts.contains(product)
-//                                            Icon(
-//                                                imageVector = if (isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-//                                                contentDescription = if (isFavorited) "Unfavorite" else "Favorite",
-//                                                tint = if (isFavorited) Color.Red else Color.Gray
-//                                            )
-//                                        }
-//                                        // Good for my skin
-//                                        IconButton(onClick = {
-//                                            viewModel.toggleSkinTag(
-//                                                product,
-//                                                ProductViewModel.TagType.GOOD
-//                                            )
-//                                        }) {
-//                                            Icon(
-//                                                imageVector = if (skinTags[product.id] == ProductViewModel.TagType.GOOD)
-//                                                    Icons.Default.ThumbUp
-//                                                else Icons.Outlined.ThumbUp,
-//                                                tint = if (skinTags[product.id] == ProductViewModel.TagType.GOOD)
-//                                                    Color.Green
-//                                                else Color.Gray,
-//                                                contentDescription = "Mark Good"
-//                                            )
-//                                        }
-//
-//                                        // Bad for my skin
-//                                        IconButton(onClick = {
-//                                            viewModel.toggleSkinTag(
-//                                                product,
-//                                                ProductViewModel.TagType.BAD
-//                                            )
-//                                        }) {
-//                                            Icon(
-//                                                imageVector = if (skinTags[product.id] == ProductViewModel.TagType.BAD)
-//                                                    Icons.Default.Warning
-//                                                else Icons.Outlined.Warning,
-//                                                tint = if (skinTags[product.id] == ProductViewModel.TagType.BAD)
-//                                                    Color.Red
-//                                                else Color.Gray,
-//                                                contentDescription = "Mark Bad"
-//                                            )
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                    if (chemicals.isNotEmpty()) {
-//                        LazyColumn(
-//                            verticalArrangement = Arrangement.spacedBy(8.dp),
-//                            modifier = Modifier.fillMaxWidth()
-//                        ) {
-//                            items(chemicals) { chemical ->
-//                                Column(modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .padding(8.dp)
-//                                ) {
-//                                    Text(chemical.chemicalName ?: "Unknown Chemical", style = MaterialTheme.typography.bodyLarge)
-//                                    chemical.casNumber?.let { Text("CAS No: $it", style = MaterialTheme.typography.bodySmall) }
-//                                    chemical.brandName?.let { Text("Brand: $it", style = MaterialTheme.typography.bodySmall) }
-//                                    chemical.productName?.let { Text("Product: $it", style = MaterialTheme.typography.bodySmall) }
-//                                }
-//                                HorizontalDivider()
-//                            }
-//                        }
-//                    }
                 }
             }
         }
