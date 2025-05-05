@@ -101,7 +101,8 @@ fun ScanOrSearchScreen(
                     modifier = modifier
                         .fillMaxSize()
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Left pane: search + scan UI
                     Column(
@@ -109,7 +110,7 @@ fun ScanOrSearchScreen(
                             .weight(1f)
                             .verticalScroll(rememberScrollState())
                             .padding(8.dp)
-                        
+
                     ) {
                         Spacer(Modifier.height(24.dp))
 

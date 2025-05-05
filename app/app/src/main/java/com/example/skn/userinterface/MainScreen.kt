@@ -108,15 +108,9 @@ fun MainScreen(
                             verticalArrangement = Arrangement.spacedBy(40.dp)
                         ) {
                             Section("Popular", popular, navController = navController,) { viewModel.toggleFavorite(it) }
-                            Column {
-                                Text("Discover Tutorials", style = MaterialTheme.typography.titleMedium)
-                                Spacer(Modifier.height(8.dp))
-                                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    items(listOf("Dry Skin @user1", "Acne @user2", "Oily Skin @user3")) { item ->
-                                        TutorialCard(item)
-                                    }
-                                }
-                            }
+                            Section("Good for My SKIN", goodForSkin, navController = navController,) { viewModel.toggleSkinTag(it, ProductViewModel.TagType.GOOD) }
+                            Section("Bad for My SKIN", badForSkin, navController = navController,) { viewModel.toggleSkinTag(it,ProductViewModel.TagType.BAD)}
+
                         }
                     }
                 }
