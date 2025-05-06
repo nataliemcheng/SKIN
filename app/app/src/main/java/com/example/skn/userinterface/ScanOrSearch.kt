@@ -109,25 +109,25 @@ fun ScanOrSearchScreen(
                         OutlinedTextField(
                             value = userSearch,
                             onValueChange = { userSearch = it },
-                            placeholder = { Text("Search a brand, product, or ingredient") },
+                            placeholder = { Text("Search for products or ingredients") },
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    val searchQuery = userSearch.trim()
+                                    if (searchQuery.isNotBlank()) {
+                                        viewModel.searchProducts(searchQuery)
+                                        chemicalsViewModel.searchChemicals(searchQuery)
+                                    }
+                                }) {
+                                    Icon(Icons.Default.Search, contentDescription = "Search")
+                                }
+                            },
                             singleLine = false,
                             maxLines = 3,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 56.dp, max = 120.dp),
+                                .heightIn(min = 56.dp, max = 120.dp)
                         )
                         Spacer(Modifier.height(16.dp))
-
-                        Button(onClick = {
-                            val searchQuery = userSearch.trim()
-                            if (searchQuery.isNotBlank()) {
-                                viewModel.searchProducts(searchQuery)
-                                chemicalsViewModel.searchChemicals(searchQuery)
-                            }
-                        }) {
-                            Text("Go")
-                        }
-
                         // Button for skin tip
                         FloatingActionButton(containerColor = MaterialTheme.colorScheme.primary,
                             onClick = { showInfo = true },
