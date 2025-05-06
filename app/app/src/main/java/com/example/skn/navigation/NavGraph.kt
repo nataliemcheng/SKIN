@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -156,6 +157,7 @@ fun AppNavGraph(
             ScanOrSearchScreen(
                 viewModel = productViewModel,
                 chemicalsViewModel = chemicalsViewModel,
+                profileViewModel = userProfileViewModel,
                 navController = navController,
                 onBackClick = { navController.popBackStack() },
                 onScanClick = navigateToScan,
@@ -180,7 +182,7 @@ fun AppNavGraph(
             val barcode = backStackEntry.arguments?.getString("barcode") ?: ""
             val context = LocalContext.current
             val snackbarHostState = remember { SnackbarHostState() }
-
+            val profileViewModel   : UserProfileViewModel   = viewModel()
             SubmitProductFormScreen(
                 navController = navController,
                 barcode = barcode,
