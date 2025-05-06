@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import com.example.skn.model.ChemicalRecord
 import androidx.compose.material3.Text
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 
 @Composable
@@ -21,11 +22,10 @@ fun IngredientResults(
             .padding(16.dp)
     ) {
         items(chemicals) { chemical ->
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-//                    Text(chemical.chemicalName ?: "Unknown Chemical", style = MaterialTheme.typography.bodyLarge)
-
                     chemical.productName?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
                     chemical.brandName?.let { Text("Brand: $it", style = MaterialTheme.typography.bodyMedium) }
                     chemical.chemicalName?.let { Text("Chemicals found: $it", style = MaterialTheme.typography.bodySmall)}

@@ -12,6 +12,7 @@ import com.example.skn.viewmodel.ProductViewModel
 import com.example.skn.viewmodel.UserProfileViewModel
 import com.example.skn.viewmodel.ChemicalsViewModel
 import com.google.firebase.FirebaseApp
+import com.example.skn.ui.theme.SKNTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,23 +21,25 @@ class MainActivity : ComponentActivity() {
         FirebaseApp.initializeApp(this)
 
         setContent {
-            val navController = rememberNavController()
+            SKNTheme{
+                val navController = rememberNavController()
 
-            val userProfileViewModel: UserProfileViewModel = viewModel()
-            val productViewModel: ProductViewModel = viewModel()
-            val chemicalsViewModel: ChemicalsViewModel = viewModel()
+                val userProfileViewModel: UserProfileViewModel = viewModel()
+                val productViewModel: ProductViewModel = viewModel()
+                val chemicalsViewModel: ChemicalsViewModel = viewModel()
 
-            // Use the factory to create AuthViewModel
-            val authViewModelFactory = AuthViewModelFactory(userProfileViewModel)
-            val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
+                // Use the factory to create AuthViewModel
+                val authViewModelFactory = AuthViewModelFactory(userProfileViewModel)
+                val authViewModel: AuthViewModel = viewModel(factory = authViewModelFactory)
 
-            AppNavGraph(
-                navController = navController,
-                productViewModel = productViewModel,
-                authViewModel = authViewModel,
-                userProfileViewModel = userProfileViewModel,
-                chemicalsViewModel = chemicalsViewModel
-            )
+                AppNavGraph(
+                    navController = navController,
+                    productViewModel = productViewModel,
+                    authViewModel = authViewModel,
+                    userProfileViewModel = userProfileViewModel,
+                    chemicalsViewModel = chemicalsViewModel
+                )
+            }
         }
     }
 }
