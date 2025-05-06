@@ -300,7 +300,7 @@ fun SkinTypeCard(skinType: String, onSkinTypeChange: (String) -> Unit, onNext: (
                             colors = ButtonDefaults.outlinedButtonColors(
                                 // fill with primary color when selected
                                 containerColor = if (isSelected)
-                                    MaterialTheme.colorScheme.primary.copy(alpha= 0.3f)
+                                    MaterialTheme.colorScheme.primary
                                 else
                                     Color.Transparent,
                                 // text color
@@ -414,7 +414,7 @@ fun SkinConcernsCard(
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = if (isSelected)
-                            MaterialTheme.colorScheme.primary.copy(alpha= 0.3f)
+                            MaterialTheme.colorScheme.primary
                             else
                                 Color.Transparent,
                             contentColor = if (isSelected) onPrimary else primary

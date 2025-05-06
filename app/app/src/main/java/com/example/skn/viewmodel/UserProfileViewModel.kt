@@ -4,22 +4,18 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skn.model.UserProfile
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.flow.update
 
 class UserProfileViewModel : ViewModel()  {
     private val auth = Firebase.auth
     private val firestore = Firebase.firestore
-    private val storage = Firebase.storage.reference
     private val userCollection = "user_profile"
 
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
@@ -47,7 +43,7 @@ class UserProfileViewModel : ViewModel()  {
     }
 
     // Fetch user profile from Firestore
-    fun fetchUser(email: String) {
+    private fun fetchUser(email: String) {
         viewModelScope.launch {
             try {
                 _loading.value = true
@@ -73,20 +69,6 @@ class UserProfileViewModel : ViewModel()  {
         }
     }
 
-
-    // Set user and load their profile
-    fun setUser(user: FirebaseUser) {
-        val email = user.email ?: return
-        fetchUser(email) // Load profile from Firestore
-        _userProfile.update { current ->
-            current?.copy(email = user.email ?: "") ?: UserProfile(
-                uid = user.uid,
-                email = user.email ?: "",
-                firstName = "",
-                lastName = ""
-            )
-        }
-    }
 
     // Save user profile to Firestore and signal update success (for completing flows)
     fun saveUserProfile(profile: UserProfile) {
@@ -174,25 +156,6 @@ class UserProfileViewModel : ViewModel()  {
         saveUserProfile(updatedProfile)
     }
 
-    // Delete user profile
-    fun deleteUserProfile(onComplete: (Boolean, String?) -> Unit) {
-        val email = getCurrentUserId()
-        if (email == null) {
-            onComplete(false, "No user is logged in")
-            return
-        }
-
-        firestore.collection(userCollection).document(email)
-            .delete()
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    _userProfile.value = UserProfile(email = email)
-                    onComplete(true, null)
-                } else {
-                    onComplete(false, task.exception?.localizedMessage)
-                }
-            }
-    }
 
     // Reset update success status - should be called after navigation completes
     fun resetUpdateStatus() {

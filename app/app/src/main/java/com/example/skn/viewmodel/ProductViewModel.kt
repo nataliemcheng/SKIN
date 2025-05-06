@@ -659,7 +659,7 @@ class ProductViewModel : ViewModel() {
         _error.value = null
     }
 
-    fun logSearchManually(it: Any) {
-
+    fun clearError() {
+        _error.value = null
     }
 }

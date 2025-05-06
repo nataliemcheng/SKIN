@@ -28,6 +28,8 @@ import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.navigation.AppBottomNavigation
 import com.example.skn.navigation.NavigationTab
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 
 
 @Composable
@@ -43,6 +45,8 @@ fun MainScreen(
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadProductsFromFirestore()
+        viewModel.clearError()
+
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -167,7 +171,6 @@ fun Section(
             items(items) { product ->
                 Card(
                     modifier = Modifier
-                        .width(160.dp)
                         .size(width = 160.dp, height = 200.dp)
                         .clickable {
                             navController.navigate("product/${product.id}")
@@ -175,36 +178,45 @@ fun Section(
                     shape = RoundedCornerShape(8.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
-                ){
-                Column(
-                    modifier = Modifier
-                        .width(160.dp)
-                        .padding(4.dp)
-                        .clickable {
-                            expandedProduct = if (expandedProduct == product) null else product
-                            navController.navigate("product/${product.id}")
-                        },
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    product.image_link?.let { imageUrl ->
-                        Image(
-                            painter = rememberAsyncImagePainter(imageUrl),
-                            contentDescription = product.name,
-                            modifier = Modifier
-                                .height(100.dp)
-                                .fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-                    Text(
-                        product.name ?: "Unnamed",
-                        maxLines = 2,
-                        style = MaterialTheme.typography.bodyMedium
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+                ) {
+                    Column {
+                        // WHITE background section for the image
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(product.image_link),
+                                contentDescription = product.name,
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                            )
+                        }
+
+                        // BROWN background section for text (inherits card color)
+                        Column(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .fillMaxSize(),
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            product.name?.let {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
                 }
-                }
+
             }
         }
 

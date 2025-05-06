@@ -5,11 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skn.api.ChemicalsApiClient
 import com.example.skn.model.ChemicalRecord
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class ChemicalsViewModel : ViewModel() {
 
@@ -26,9 +24,6 @@ class ChemicalsViewModel : ViewModel() {
     // Internal data
     private val _allChemicals = mutableListOf<ChemicalRecord>()
 
-    // Firestore
-    private val firestore = FirebaseFirestore.getInstance()
-    private val collectionName = "all_products"
 
     // Pagination
     private val resourceId = "57da6c9a-41a7-44b0-ab8d-815ff2cd5913"

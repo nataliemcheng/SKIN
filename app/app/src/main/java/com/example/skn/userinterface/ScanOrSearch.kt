@@ -116,9 +116,11 @@ fun ScanOrSearchScreen(
                             value = userSearch,
                             onValueChange = { userSearch = it },
                             placeholder = { Text("Search a brand, product, or ingredient") },
+                            singleLine = false,
+                            maxLines = 3,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp),
+                                .heightIn(min = 56.dp, max = 120.dp),
                         )
                         Spacer(Modifier.height(16.dp))
 
@@ -294,26 +296,6 @@ fun ScanOrSearchScreen(
                 {
                     Spacer(Modifier.height(16.dp))
 
-//                    Row(modifier = modifier.fillMaxWidth().padding(16.dp),
-//                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        OutlinedTextField(value = userSearch,
-//                            onValueChange = { userSearch = it },
-//                            placeholder = { Text("Search a brand, product, or ingredient") },
-//                            modifier = Modifier.weight(1f)
-//                        )
-//
-//                        Button(onClick = {
-//                            val searchQuery = userSearch.trim()
-//                            if (searchQuery.isNotBlank()) {
-//                                viewModel.searchProducts(searchQuery)
-//                                chemicalsViewModel.searchChemicals(searchQuery)
-//                            }
-//                        }) {
-//                            Text("Go")
-//                        }
-//                    }
                     OutlinedTextField(
                         value = userSearch,
                         onValueChange = { userSearch = it },
@@ -329,9 +311,11 @@ fun ScanOrSearchScreen(
                                 Icon(Icons.Default.Search, contentDescription = "Search")
                             }
                         },
+                        singleLine = false,
+                        maxLines = 3,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
+                            .heightIn(min = 56.dp, max = 120.dp)
                     )
 
 

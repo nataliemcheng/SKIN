@@ -452,7 +452,7 @@ fun PasswordChangeSection(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.medium
     ) {
         Column(
