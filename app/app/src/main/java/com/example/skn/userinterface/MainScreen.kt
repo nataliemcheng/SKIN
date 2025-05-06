@@ -27,6 +27,8 @@ import com.example.skn.model.Product
 import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.navigation.AppBottomNavigation
 import com.example.skn.navigation.NavigationTab
+import androidx.compose.foundation.shape.RoundedCornerShape
+
 
 @Composable
 fun MainScreen(
@@ -163,6 +165,19 @@ fun Section(
 
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(items) { product ->
+                Card(
+                    modifier = Modifier
+                        .width(160.dp)
+                        .size(width = 160.dp, height = 200.dp)
+                        .clickable {
+                            navController.navigate("product/${product.id}")
+                        },
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                ){
                 Column(
                     modifier = Modifier
                         .width(160.dp)
@@ -188,6 +203,7 @@ fun Section(
                         maxLines = 2,
                         style = MaterialTheme.typography.bodyMedium
                     )
+                }
                 }
             }
         }
