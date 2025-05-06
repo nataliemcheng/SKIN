@@ -4,10 +4,7 @@ import android.util.Log
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -109,7 +106,6 @@ fun AppNavGraph(
 
         composable("onboarding") {
             OnBoardingScreen(
-                authViewModel = authViewModel,
                 profileViewModel = userProfileViewModel,
                 onFinish = {
                     navController.navigate("main") {
@@ -127,7 +123,6 @@ fun AppNavGraph(
 
             MainScreen(
                 viewModel = productViewModel,
-                authViewModel = authViewModel,
                 onSearchClick = navigateToSearch,
                 onScanClick = navigateToScan,
                 onProfileClick = navigateToProfile,
@@ -165,7 +160,6 @@ fun AppNavGraph(
                 chemicalsViewModel = chemicalsViewModel,
                 profileViewModel = userProfileViewModel,
                 navController = navController,
-                onBackClick = { navController.popBackStack() },
                 onScanClick = navigateToScan,
                 onHomeClick = navigateToHome,
                 onProfileClick = navigateToProfile,
@@ -186,9 +180,7 @@ fun AppNavGraph(
             arguments = listOf(navArgument("barcode") { defaultValue = "" })
         ) { backStackEntry ->
             val barcode = backStackEntry.arguments?.getString("barcode") ?: ""
-            val context = LocalContext.current
             val snackbarHostState = remember { SnackbarHostState() }
-            val profileViewModel   : UserProfileViewModel   = viewModel()
             SubmitProductFormScreen(
                 navController = navController,
                 barcode = barcode,
@@ -230,7 +222,6 @@ fun AppNavGraph(
         composable("profile") {
             UserProfileScreen(
                 authViewModel = authViewModel,
-                onNavigateBack = { navController.popBackStack() },
                 onLogout = performLogout,
                 profileViewModel = userProfileViewModel,
                 onScanClick = navigateToScan,

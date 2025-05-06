@@ -3,19 +3,15 @@ package com.example.skn.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.skn.model.UserProfile
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 class AuthViewModel(private val userProfileViewModel: UserProfileViewModel) : ViewModel() {
 
     private val auth = Firebase.auth
 
-    private val _currentUser = MutableStateFlow<FirebaseUser?>(auth.currentUser)
-    val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
+    private val _currentUser = MutableStateFlow(auth.currentUser)
 
     init {
         auth.addAuthStateListener { firebaseAuth ->
@@ -108,7 +104,4 @@ class AuthViewModel(private val userProfileViewModel: UserProfileViewModel) : Vi
             }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-    }
 }

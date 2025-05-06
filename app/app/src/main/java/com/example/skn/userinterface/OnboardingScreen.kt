@@ -7,14 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -32,7 +29,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -51,17 +47,14 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.viewmodel.UserProfileViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun OnBoardingScreen(
-    authViewModel: AuthViewModel,
     profileViewModel: UserProfileViewModel,
     onFinish: () -> Unit
 ) {
-    val currentUser by authViewModel.currentUser.collectAsStateWithLifecycle()
     val loading by profileViewModel.loading.collectAsStateWithLifecycle()
     val profileUpdateSuccess by profileViewModel.updateSuccess.collectAsStateWithLifecycle()
     val error by profileViewModel.error.collectAsStateWithLifecycle()
@@ -280,7 +273,7 @@ fun SkinTypeCard(skinType: String, onSkinTypeChange: (String) -> Unit, onNext: (
                         .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ){
-                    skinTypes.forEachIndexed(){
+                    skinTypes.forEachIndexed {
                         index, type ->
                         val isSelected = index == selectedIndex
 
@@ -366,7 +359,6 @@ fun SkinTypeCardTablet(skinType: String, onSkinTypeChange: (String) -> Unit, onN
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkinConcernsCard(
     skinConcerns: List<String>,

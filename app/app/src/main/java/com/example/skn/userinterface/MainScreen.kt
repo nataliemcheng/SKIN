@@ -8,23 +8,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.Dp
 import com.example.skn.viewmodel.ProductViewModel
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.rememberAsyncImagePainter
 import com.example.skn.model.Product
-import com.example.skn.viewmodel.AuthViewModel
 import com.example.skn.navigation.AppBottomNavigation
 import com.example.skn.navigation.NavigationTab
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,7 +31,6 @@ import androidx.compose.ui.graphics.Color
 fun MainScreen(
     navController: NavHostController,
     viewModel: ProductViewModel,
-    authViewModel: AuthViewModel,
     onSearchClick: () -> Unit,
     onProfileClick: () -> Unit,
     onScanClick: () -> Unit,
@@ -110,17 +104,17 @@ fun MainScreen(
                             verticalArrangement = Arrangement.spacedBy(40.dp)
 
                         ) {
-                            Section("Favorites", favorites, navController = navController,)
-                            Section("Recently Searched", recentlySearched, navController = navController,)
+                            Section("Favorites", favorites, navController = navController)
+                            Section("Recently Searched", recentlySearched, navController = navController)
                         }
                         VerticalDivider()
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(40.dp)
                         ) {
-                            Section("Popular", popular, navController = navController,)
-                            Section("Good for My SKIN", goodForSkin, navController = navController,)
-                            Section("Bad for My SKIN", badForSkin, navController = navController,)
+                            Section("Popular", popular, navController = navController)
+                            Section("Good for My SKIN", goodForSkin, navController = navController)
+                            Section("Bad for My SKIN", badForSkin, navController = navController)
 
                         }
                     }
@@ -131,19 +125,19 @@ fun MainScreen(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         item {
-                            Section("Favorites", favorites, navController = navController,)
+                            Section("Favorites", favorites, navController = navController)
                         }
                         item {
-                            Section("Recently Searched", recentlySearched, navController = navController,)
+                            Section("Recently Searched", recentlySearched, navController = navController)
                         }
                         item {
-                            Section("Popular", popular, navController = navController,)
+                            Section("Popular", popular, navController = navController)
                         }
                         item {
-                            Section("Good for My SKIN", goodForSkin, navController = navController,)
+                            Section("Good for My SKIN", goodForSkin, navController = navController)
                         }
                         item {
-                            Section("Bad for My SKIN", badForSkin, navController = navController,)
+                            Section("Bad for My SKIN", badForSkin, navController = navController)
                         }
                         }
                     }
@@ -161,7 +155,6 @@ fun Section(
     items: List<Product>,
     navController: NavHostController
 ) {
-    var expandedProduct by remember { mutableStateOf<Product?>(null) }
 
     Column {
         Text(title, fontSize = 20.sp, style = MaterialTheme.typography.titleMedium)
@@ -224,40 +217,5 @@ fun Section(
     }
 }
 
-@Composable
-fun DropdownMenuButton(onLogout: () -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
 
-    Box {
-        IconButton(onClick = { expanded = true }) {
-            Icon(Icons.Default.MoreVert, contentDescription = "Menu")
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text("Logout") },
-                onClick = {
-                    expanded = false
-                    onLogout()
-                }
-            )
-        }
-    }
-}
-
-@Composable
-fun VerticalBorder (
-    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-    thickness: Dp = 1.dp,
-    modifier: Modifier = Modifier
-    ){
-    Box(
-        modifier
-            .fillMaxHeight()
-            .width(thickness)
-            .background(color)
-    )
-}
 

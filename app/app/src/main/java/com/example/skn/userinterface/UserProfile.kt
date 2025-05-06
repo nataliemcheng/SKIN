@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +27,6 @@ import com.example.skn.navigation.NavigationTab
 fun UserProfileScreen(
     authViewModel: AuthViewModel,
     profileViewModel: UserProfileViewModel,
-    onNavigateBack: () -> Unit,
     onScanClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onLogout: () -> Unit = {},
@@ -526,11 +524,11 @@ fun PasswordChangeSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MultiSelectSkinConcernDropdown(
+    modifier: Modifier = Modifier,
     options: List<String>,
     selected: List<String>,
     onSelectionChange: (List<String>) -> Unit,
     label: String = "Skin Concerns",
-    modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -579,11 +577,11 @@ fun MultiSelectSkinConcernDropdown(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkinTypeDropdown(
+    modifier: Modifier = Modifier,
     options: List<String>,
     selected: String,
     onSelectionChange: (String) -> Unit,
     label: String = "Skin Type",
-    modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
 

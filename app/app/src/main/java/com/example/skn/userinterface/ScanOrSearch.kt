@@ -5,12 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -29,15 +27,14 @@ import com.example.skn.viewmodel.UserProfileViewModel
 
 @Composable
 fun ScanOrSearchScreen(
+    modifier: Modifier = Modifier,
     viewModel: ProductViewModel,
     chemicalsViewModel: ChemicalsViewModel,
     profileViewModel: UserProfileViewModel,
     navController: NavHostController,
-    onBackClick: () -> Unit,
     onScanClick: () -> Unit = {},
     snackbarHostState: SnackbarHostState,
     scannedBarcode: String? = null,
-    modifier: Modifier = Modifier,
     onHomeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
@@ -46,9 +43,6 @@ fun ScanOrSearchScreen(
     val isTabletLandscape =
         isTablet && configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    var brand by remember { mutableStateOf("") }
-    var productType by remember { mutableStateOf("") }
-    var ingredient by remember { mutableStateOf("") }
 
     val products by viewModel.products.collectAsState()
     val productsLoading by viewModel.loading.collectAsState()
@@ -176,7 +170,7 @@ fun ScanOrSearchScreen(
                         }
 
                         val tabs = listOf("Products", "Ingredients")
-                        var selectedTabIndex by remember { mutableStateOf(0) }
+                        var selectedTabIndex by remember { mutableIntStateOf(0) }
 
                         TabRow(selectedTabIndex = selectedTabIndex,
                             indicator = { tabPositions -> // Indicator for the selected tab
@@ -343,7 +337,7 @@ fun ScanOrSearchScreen(
                     }
 
                     val tabs = listOf("Products", "Ingredients")
-                    var selectedTabIndex by remember { mutableStateOf(0) }
+                    var selectedTabIndex by remember { mutableIntStateOf(0) }
 
                     TabRow(selectedTabIndex = selectedTabIndex,
                         indicator = { tabPositions -> // Indicator for the selected tab

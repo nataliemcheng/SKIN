@@ -3,7 +3,6 @@ package com.example.skn.navigation
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
@@ -14,7 +13,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 enum class NavigationTab {
@@ -37,8 +35,7 @@ fun AppBottomNavigation(
         unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
         indicatorColor      = MaterialTheme.colorScheme.secondaryContainer  // ← your new “selected” pill
     )
-    NavigationBar(
-    ) {
+    NavigationBar {
         NavigationBarItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
             selected = selectedTab == NavigationTab.HOME,
@@ -48,7 +45,8 @@ fun AppBottomNavigation(
         NavigationBarItem(
             icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
             selected = selectedTab == NavigationTab.SEARCH,
-            onClick = onSearchClick
+            onClick = onSearchClick,
+            colors   = navItemColors
 
         )
         // Camera/Scan (center icon)
@@ -61,12 +59,14 @@ fun AppBottomNavigation(
                 )
             },
             selected = selectedTab == NavigationTab.SCAN,
-            onClick = onScanClick
+            onClick = onScanClick,
+            colors   = navItemColors
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Profile") },
             selected = selectedTab == NavigationTab.PROFILE,
-            onClick = onProfileClick
+            onClick = onProfileClick,
+            colors   = navItemColors
         )
 
     }
