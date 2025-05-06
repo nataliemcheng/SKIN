@@ -237,13 +237,13 @@ fun BarcodeScannerScreen(
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
                 ) {
                     if (scannedProduct != null) {
                         val product = scannedProduct!!
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .padding(16.dp)
                                 .verticalScroll(rememberScrollState())
                         ) {
                             Text("✅ Product Found", style = MaterialTheme.typography.titleMedium)
@@ -251,7 +251,7 @@ fun BarcodeScannerScreen(
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.Top
                             ) {
                                 product.image_link?.let {
                                     Image(
@@ -265,23 +265,24 @@ fun BarcodeScannerScreen(
 
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        if (product.brand.isNullOrBlank()) "No brand" else product.brand,
+                                        text = product.brand.takeUnless { it.isNullOrBlank() } ?: "No brand",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     Spacer(Modifier.height(4.dp))
                                     Text(
-                                        if (product.name.isNullOrBlank()) "No name" else product.name,
+                                        text = product.name.takeUnless { it.isNullOrBlank() } ?: "No name",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     Spacer(Modifier.height(4.dp))
                                     Text(
-                                        if (product.description.isNullOrBlank()) "No description" else product.description,
+                                        text = product.description.takeUnless { it.isNullOrBlank() } ?: "No description",
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                 }
                             }
 
-                            Spacer(Modifier.height(16.dp))
+                            Spacer(Modifier.height(24.dp))
+
                             Button(
                                 onClick = { showSheet = false },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -290,23 +291,29 @@ fun BarcodeScannerScreen(
                             }
                         }
                     } else if (error != null) {
-                        Column(
+                        Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .fillMaxWidth()
+                                .wrapContentHeight()
+                                .padding(24.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text("❌ Product not found", color = Color.Red)
-                            Spacer(Modifier.height(8.dp))
-                            Button(onClick = {
-                                scannedBarcode?.let { barcode ->
-                                    navController.navigate("submitProduct/${Uri.encode(barcode)}")
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text("❌ Product not found", color = Color.Red)
+                                Button(onClick = {
+                                    scannedBarcode?.let { barcode ->
+                                        navController.navigate("submitProduct/${Uri.encode(barcode)}")
+                                    }
+                                }) {
+                                    Text("Submit Product Info")
                                 }
-                            }) {
-                                Text("Submit Product Info")
                             }
                         }
                     }
+
                 }
             }
         }
