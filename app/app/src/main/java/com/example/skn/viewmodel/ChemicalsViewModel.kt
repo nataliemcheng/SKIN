@@ -1,6 +1,5 @@
 package com.example.skn.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skn.api.ChemicalsApiClient
@@ -75,41 +74,19 @@ class ChemicalsViewModel : ViewModel() {
                     hasMoreData = _allChemicals.size < totalRecords && newRecords.isNotEmpty()
                     _chemicals.value = _allChemicals.toList()
 
-                    Log.d("ChemicalsVM", "Fetched ${newRecords.size} records at offset $currentOffset")
                 } else {
                     val message = body?.help ?: "Unknown API error"
                     _errorMessage.value = "API Error: $message"
-                    Log.e("ChemicalsVM", message)
                 }
             } else {
                 _errorMessage.value = "HTTP Error: ${response.code()} - ${response.message()}"
-                Log.e("ChemicalsVM", "HTTP Error: ${response.code()} - ${response.message()}")
             }
         } catch (e: Exception) {
             _errorMessage.value = "Exception: ${e.localizedMessage}"
-            Log.e("ChemicalsVM", "Exception during API call", e)
         } finally {
             _isLoading.value = false
         }
     }
-
-//    fun saveAllChemicalsToFirestore() = viewModelScope.launch {
-//        val col = firestore.collection(collectionName)
-//        val batch = firestore.batch()
-//
-//        _allChemicals.forEach { chem ->
-//            val docId = chem.casNumber ?: col.document().id
-//            batch.set(col.document(docId), chem)
-//        }
-//
-//        try {
-//            batch.commit().await()
-//            Log.d("ChemicalsVM", "Saved ${_allChemicals.size} chemicals to Firestore")
-//        } catch (e: Exception) {
-//            _errorMessage.value = "Save failed: ${e.localizedMessage}"
-//            Log.e("ChemicalsVM", "Error saving to Firestore", e)
-//        }
-//    }
 
     private fun resetPagination() {
         _allChemicals.clear()

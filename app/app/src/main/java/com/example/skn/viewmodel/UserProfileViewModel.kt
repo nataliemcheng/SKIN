@@ -1,6 +1,5 @@
 package com.example.skn.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skn.model.UserProfile
@@ -61,7 +60,6 @@ class UserProfileViewModel : ViewModel()  {
                     saveUserProfileWithoutSuccess(newProfile)
                 }
             } catch (e: Exception) {
-                Log.e("UserProfile:", "Error fetching user profile", e)
                 _error.value = "Failed to load profile: ${e.localizedMessage}"
             } finally {
                 _loading.value = false
@@ -92,9 +90,7 @@ class UserProfileViewModel : ViewModel()  {
 
                 _userProfile.value = updatedProfile
                 _updateSuccess.value = true  // Set updateSuccess to true after successful save
-                Log.d("UserProfile:", "User Profile saved successfully")
             } catch (e: Exception) {
-                Log.e("UserProfile:", "Error saving user profile", e)
                 _error.value = "Failed to save profile: ${e.localizedMessage}"
             } finally {
                 _loading.value = false
@@ -123,9 +119,7 @@ class UserProfileViewModel : ViewModel()  {
 
                 _userProfile.value = updatedProfile
                 // Don't set _updateSuccess to true - this is the key difference
-                Log.d("UserProfile:", "Initial user profile created (no navigation)")
             } catch (e: Exception) {
-                Log.e("UserProfile:", "Error saving initial user profile", e)
                 _error.value = "Failed to save profile: ${e.localizedMessage}"
             } finally {
                 _loading.value = false

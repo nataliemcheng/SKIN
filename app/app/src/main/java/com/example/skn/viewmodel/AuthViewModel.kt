@@ -1,6 +1,5 @@
 package com.example.skn.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.skn.model.UserProfile
 import com.google.firebase.auth.ktx.auth
@@ -25,7 +24,6 @@ class AuthViewModel(private val userProfileViewModel: UserProfileViewModel) : Vi
                 if (task.isSuccessful) {
                     val uid = auth.currentUser?.uid
                     if (uid != null) {
-                        Log.d("Auth", "✅ Registered: $uid")
                         onResult(true, uid)
                         userProfileViewModel.saveUserProfile(
                             UserProfile(
@@ -38,12 +36,10 @@ class AuthViewModel(private val userProfileViewModel: UserProfileViewModel) : Vi
                             )
                         )
                     } else {
-                        Log.e("Auth", "UID is null after registration")
                         onResult(false, "User ID is null")
                     }
                 } else {
                     val errorMsg = task.exception?.localizedMessage ?: "Unknown error occurred"
-                    Log.e("Auth", "Registration failed: $errorMsg", task.exception)
                     onResult(false, errorMsg)
                 }
             }
@@ -64,7 +60,6 @@ class AuthViewModel(private val userProfileViewModel: UserProfileViewModel) : Vi
 
     fun logout() {
         auth.signOut()
-        Log.d("Auth", "Logged out")
     }
 
     fun changePassword(currentPassword: String, newPassword: String, onResult: (Boolean, String?) -> Unit) {
@@ -88,17 +83,14 @@ class AuthViewModel(private val userProfileViewModel: UserProfileViewModel) : Vi
                     user.updatePassword(newPassword)
                         .addOnCompleteListener { updateTask ->
                             if (updateTask.isSuccessful) {
-                                Log.d("Auth", "Password updated successfully")
                                 onResult(true, null)
                             } else {
                                 val errorMsg = updateTask.exception?.localizedMessage ?: "Failed to update password"
-                                Log.e("Auth", "Password update failed: $errorMsg", updateTask.exception)
                                 onResult(false, errorMsg)
                             }
                         }
                 } else {
                     val errorMsg = reauthTask.exception?.localizedMessage ?: "Re-authentication failed"
-                    Log.e("Auth", "Re-authentication failed: $errorMsg", reauthTask.exception)
                     onResult(false, errorMsg)
                 }
             }

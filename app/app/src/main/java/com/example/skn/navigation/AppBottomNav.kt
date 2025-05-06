@@ -33,7 +33,7 @@ fun AppBottomNavigation(
     val navItemColors = NavigationBarItemDefaults.colors(
         selectedIconColor   = MaterialTheme.colorScheme.primary,
         unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        indicatorColor      = MaterialTheme.colorScheme.secondaryContainer  // ← your new “selected” pill
+        indicatorColor      = MaterialTheme.colorScheme.secondaryContainer
     )
     NavigationBar {
         NavigationBarItem(

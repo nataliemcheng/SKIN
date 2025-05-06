@@ -9,7 +9,7 @@ object UPCItemApiClient {
     private const val BASE_URL = "https://api.upcitemdb.com/"
 
     private val moshi: Moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())  // ✅ this line is essential
+        .add(KotlinJsonAdapterFactory())
         .build()
 
     val api: UPCItemApiService by lazy {

@@ -156,7 +156,7 @@ fun SubmitProductFormScreen(
                     )
                 } else {
                     Text(
-                        "Tap to upload a photo of the product",
+                        "Tap to Upload",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

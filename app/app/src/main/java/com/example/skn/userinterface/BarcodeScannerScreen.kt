@@ -1,7 +1,6 @@
 package com.example.skn.userinterface
 
 import android.net.Uri
-import android.util.Log
 import android.view.ViewGroup
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -47,7 +46,7 @@ fun BarcodeScannerScreen(
 ) {
     val scope = rememberCoroutineScope()
 
-    // ✅ Handle system back press
+    // Handle system back press
     BackHandler {
         scope.launch {
             viewModel.resetState()
@@ -78,8 +77,6 @@ fun BarcodeScannerScreen(
                     result?.let {
                         if (scannedBarcode != it) {
                             scannedBarcode = it
-                            Log.d("BarcodeScanner", "Scanned from gallery: $it")
-
                             viewModel.checkIfProductIsPending(it)
                             showSheet = true
                             isScanningDone = true

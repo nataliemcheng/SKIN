@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import android.util.Log
 import com.example.skn.api.UPCItemApiClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Query
@@ -85,8 +84,8 @@ class ProductViewModel : ViewModel() {
             .collection("favorites")
             .document(product.id.toString()) // use product ID as the document ID
             .set(data)
-            .addOnSuccessListener { Log.d("Favorites", "Saved ${product.name} to favorites") }
-            .addOnFailureListener { Log.e("Favorites", "Failed to save favorite", it) }
+            .addOnSuccessListener { }
+            .addOnFailureListener { }
     }
 
     fun loadFavoritesFromFirestore() {
@@ -121,10 +120,8 @@ class ProductViewModel : ViewModel() {
                     )
                 }
                 _favoriteProducts.value = favoriteList
-                Log.d("Favorites", "Loaded ${favoriteList.size} favorites from Firestore")
             }
             .addOnFailureListener {
-                Log.e("Favorites", "Failed to load favorites", it)
             }
     }
 
@@ -144,45 +141,6 @@ class ProductViewModel : ViewModel() {
             }
     }
 
-
-
-    fun fetchAllProducts() {
-        _loading.value = true
-        viewModelScope.launch {
-            try {
-                val db = Firebase.firestore
-                val response = MakeupApiClient.api.getAllProducts()
-                if (response.isSuccessful) {
-                    val productList = response.body() ?: emptyList()
-                    _products.value = productList
-                    _error.value = null
-
-                    // ✅ Save to Firestore under "all_products"
-                    val batch = db.batch()
-                    val collectionRef = db.collection("all_products")
-                    productList.forEach { product ->
-                        val docRef = collectionRef.document(product.id.toString())
-                        batch.set(docRef, product)
-                    }
-                    batch.commit()
-                        .addOnSuccessListener {
-                            Log.d("Firestore", "All products saved to Firestore")
-                        }
-                        .addOnFailureListener {
-                            Log.e("Firestore", "Failed to save products to Firestore", it)
-                        }
-
-                } else {
-                    _error.value = "Error: ${response.message()}"
-                }
-            } catch (e: Exception) {
-                _error.value = "Exception: ${e.localizedMessage}"
-            } finally {
-                _loading.value = false
-            }
-        }
-    }
-
     fun searchProducts(userSearch: String) {
         _loading.value = true
 
@@ -197,11 +155,9 @@ class ProductViewModel : ViewModel() {
 
                 // For likely ingredients, we fetch all products right away for thorough searching
                 if (isLikelyIngredient) {
-                    Log.d("Search", "Likely ingredient search for: $query")
                     val allProductsResponse = MakeupApiClient.api.getAllProducts()
                     if (allProductsResponse.isSuccessful) {
                         results += allProductsResponse.body().orEmpty()
-                        Log.d("Search", "Got ${results.size} products from API to search for ingredient")
                     } else {
                         // API fallback to Firestore
                         val db = Firebase.firestore
@@ -210,7 +166,6 @@ class ProductViewModel : ViewModel() {
                             .await()
                             .toObjects(Product::class.java)
                         results += firestoreProducts
-                        Log.d("Search", "Got ${firestoreProducts.size} products from Firestore to search for ingredient")
                     }
                 } else {
                     // Regular search via API for non-ingredient queries
@@ -290,14 +245,12 @@ class ProductViewModel : ViewModel() {
                     }
 
                 // Log search results
-                Log.d("Search", "Found ${distinctResults.size} results for query: $query")
 
                 _products.value = distinctResults
 
                 _error.value = if (distinctResults.isEmpty()) "No products found for '$query'" else null
 
             } catch (e: Exception) {
-                Log.e("Search", "Error searching for $query", e)
                 _error.value = "Exception: ${e.localizedMessage}"
             } finally {
                 _loading.value = false
@@ -404,7 +357,6 @@ class ProductViewModel : ViewModel() {
     fun logSearchQueryToFirebase(product: Product) {
         val db = Firebase.firestore
         val userId = getCurrentUserId() ?: return
-        Log.d("ID:", userId)
 
         val data = hashMapOf(
             "productId" to product.id,
@@ -431,20 +383,16 @@ class ProductViewModel : ViewModel() {
                     // Update existing search's timestamp
                     val existingDoc = querySnapshot.documents.first()
                     existingDoc.reference.update("timestamp", data["timestamp"]!!)
-                    Log.d("Firestore", "Updated timestamp for product: ${product.name}")
                 } else {
                     // Add new search record
                     searchHistoryRef.add(data)
                         .addOnSuccessListener {
-                            Log.d("Firestore", "Logged search for product: ${product.name}")
                         }
                         .addOnFailureListener {
-                            Log.e("Firestore", "Failed to log product search", it)
                         }
                 }
             }
             .addOnFailureListener {
-                Log.e("Firestore", "Failed to check for existing search", it)
             }
     }
 
@@ -486,10 +434,8 @@ class ProductViewModel : ViewModel() {
                     )
                 }
                 _recentlySearched.value = recentProducts
-                Log.d("Firestore", "Loaded ${recentProducts.size} recent searches from Firestore")
             }
             .addOnFailureListener {
-                Log.e("Firestore", "Failed to load recent searches", it)
             }
     }
 
@@ -503,11 +449,9 @@ class ProductViewModel : ViewModel() {
                     doc.toObject(Product::class.java)
                 }
                 _products.value = productList
-                Log.d("Firestore", "Loaded ${productList.size} products from Firestore")
             }
             .addOnFailureListener {
                 _error.value = "Failed to load products from Firestore"
-                Log.e("Firestore", "Error loading products", it)
             }
             .addOnCompleteListener {
                 _loading.value = false
@@ -606,7 +550,6 @@ class ProductViewModel : ViewModel() {
                     onResult(null)
                 }
             } catch (e: Exception) {
-                Log.e("UPC Lookup", "Error: ${e.localizedMessage}", e)
                 onResult(null)
             }
         }

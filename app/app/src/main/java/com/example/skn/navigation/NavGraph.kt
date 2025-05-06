@@ -1,6 +1,5 @@
 package com.example.skn.navigation
 
-import android.util.Log
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -204,9 +203,7 @@ fun AppNavGraph(
                                     launchSingleTop = true
                                 }
                             }
-                            Log.d("Firestore", "✅ Product submitted successfully.")
                         } catch (e: Exception) {
-                            Log.e("Firestore", "❌ Failed to submit: ${e.localizedMessage}")
                             withContext(Dispatchers.Main) {
                                 snackbarHostState.showSnackbar("❌ Failed to submit product")
                             }

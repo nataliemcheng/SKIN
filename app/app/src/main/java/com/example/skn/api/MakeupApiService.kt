@@ -10,12 +10,6 @@ interface MakeupApiService {
     suspend fun getAllProducts(): Response<List<Product>>
 
     @GET("products.json")
-    suspend fun getProductsByBrand(@Query("brand") brand: String): Response<List<Product>>
-
-    @GET("products.json")
-    suspend fun getProductsByType(@Query("product_type") productType: String): Response<List<Product>>
-
-    @GET("products.json")
     suspend fun searchProducts(
         @Query("brand") brand: String?,
         @Query("product_type") productType: String?,
