@@ -38,7 +38,7 @@ class UserProfileViewModel : ViewModel()  {
         // Load user profile when ViewModel is created if a user is logged in
         // We don't want to trigger update success during initial load
         _updateSuccess.value = false
-        auth.currentUser?.uid?.let{ fetchUser(it) }
+        auth.currentUser?.email?.let { fetchUser(it) }
     }
 
     // Get current user ID or null if not logged in
