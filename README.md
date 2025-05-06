@@ -15,3 +15,8 @@ SK!N is a mobile app to stay informed on skincare and makeup products.
 ## Sprint 2
 [Documentation](https://docs.google.com/document/d/1gKtSpog2-IPfDf46LMAtFPXgFcFGtAyRPUBB9NXIjI8/edit?usp=sharing)
 [Sprint 2 Presentation](https://docs.google.com/presentation/d/1y4Fh0YGUWRA_avf8WDi2FVfD76mDIGoN1RulmP_I9Dc/edit?usp=sharing)
+
+
+## Final Presentation
+[Final Report](https://docs.google.com/document/d/1SLIRUeHCWOVaiCRU7UQC-LZ1YwSJSc0Zeo9wqheWeII/edit?usp=sharing)
+[Final Presentation](https://docs.google.com/presentation/d/1hizS5_dw7ca_2HtyszSFOmp2ohG29ff4SzJ99CGq5W8/edit?usp=sharing)
