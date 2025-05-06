@@ -77,6 +77,7 @@ fun AppNavGraph(
     ) {
         composable("login") {
             LoginScreen(
+                productViewModel = productViewModel,
                 authViewModel = authViewModel,
                 navController = navController,
                 onLoginSuccess = { navController.navigate("main") {
@@ -88,6 +89,7 @@ fun AppNavGraph(
 
         composable("signup") {
             SignUpScreen(
+                productViewModel = productViewModel,
                 authViewModel = authViewModel,
                 onSignUpSuccess = {
                     navController.navigate("onboarding") {

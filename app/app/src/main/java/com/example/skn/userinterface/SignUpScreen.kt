@@ -11,10 +11,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.skn.viewmodel.AuthViewModel
+import com.example.skn.viewmodel.ProductViewModel
 import com.example.skn.viewmodel.UserProfileViewModel
 
 @Composable
 fun SignUpScreen(
+    productViewModel: ProductViewModel,
     authViewModel: AuthViewModel,
     onSignUpSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit
@@ -80,6 +82,10 @@ fun SignUpScreen(
                 } else {
                     authViewModel.signUp(email, password) { success, message ->
                         if (success) {
+
+                            productViewModel.loadRecentSearchesFromFirebase()
+                            productViewModel.loadFavoritesFromFirestore()
+                            productViewModel.loadSkinTagsFromFirestore()
                             onSignUpSuccess()
                         } else {
                             errorMessage = message

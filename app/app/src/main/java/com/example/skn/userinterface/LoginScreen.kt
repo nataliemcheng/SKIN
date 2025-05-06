@@ -10,9 +10,11 @@ import androidx.navigation.NavHostController
 import com.example.skn.viewmodel.AuthViewModel
 
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.example.skn.viewmodel.ProductViewModel
 
 @Composable
 fun LoginScreen(
+    productViewModel: ProductViewModel,
     authViewModel: AuthViewModel,
     navController: NavHostController,
     onLoginSuccess: () -> Unit
@@ -85,6 +87,11 @@ fun LoginScreen(
                         isLoading = false
                         if (success) {
                             errorMessage = null
+
+                            productViewModel.loadRecentSearchesFromFirebase()
+                            productViewModel.loadFavoritesFromFirestore()
+                            productViewModel.loadSkinTagsFromFirestore()
+
                             onLoginSuccess()
                         } else {
                             errorMessage = when {

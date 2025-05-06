@@ -89,7 +89,7 @@ class ProductViewModel : ViewModel() {
             .addOnFailureListener { Log.e("Favorites", "Failed to save favorite", it) }
     }
 
-    private fun loadFavoritesFromFirestore() {
+    fun loadFavoritesFromFirestore() {
         val db = Firebase.firestore
         val userId = getCurrentUserId() ?: return
 
@@ -400,12 +400,12 @@ class ProductViewModel : ViewModel() {
 
     private fun getCurrentUserId(): String? {
         return FirebaseAuth.getInstance().currentUser?.email
-
     }
 
     fun logSearchQueryToFirebase(product: Product) {
         val db = Firebase.firestore
         val userId = getCurrentUserId() ?: return
+        Log.d("ID:", userId)
 
         val data = hashMapOf(
             "productId" to product.id,
@@ -514,7 +514,7 @@ class ProductViewModel : ViewModel() {
                 _loading.value = false
             }
     }
-    private fun loadSkinTagsFromFirestore() {
+    fun loadSkinTagsFromFirestore() {
         val uid = getCurrentUserId() ?: return
         Firebase.firestore
             .collection("user_activity")
