@@ -1,24 +1,15 @@
 package com.example.skn.userinterface
 
 import android.content.res.Configuration
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
@@ -30,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import coil.compose.rememberAsyncImagePainter
 import com.example.skn.viewmodel.ProductViewModel
 import com.example.skn.viewmodel.ChemicalsViewModel
 import com.example.skn.navigation.AppBottomNavigation
@@ -143,12 +133,14 @@ fun ScanOrSearchScreen(
                         }
 
                         // Button for skin tip
-                        FloatingActionButton(
+                        FloatingActionButton(containerColor = MaterialTheme.colorScheme.primary,
                             onClick = { showInfo = true },
-                            modifier = Modifier
-                                //.padding(16.dp)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Skin Tips")
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                                Icon(imageVector = Icons.Default.Checklist, contentDescription = "Skin Tips", tint = MaterialTheme.colorScheme.background)
+                                Text("  Skin Tips")
+                            }
                         }
 
                     }
@@ -230,13 +222,11 @@ fun ScanOrSearchScreen(
                                 .clickable { showInfo = false } // dismiss when tapping outside
                         ){
                             // skin info card
-                        Card(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .fillMaxWidth(0.9f)
-                                .wrapContentHeight(),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-                        ) {
+
+                            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                modifier = Modifier.align(Alignment.Center).fillMaxWidth(0.9f).wrapContentHeight(),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                            ) {
                             val goodRecs = when (skinType) {
                                 "Oily"        -> listOf("Salicylic Acid", "Niacinamide", "Clay")
                                 "Dry"         -> listOf("Hyaluronic Acid", "Ceramides", "Glycerin")
@@ -304,36 +294,61 @@ fun ScanOrSearchScreen(
                 {
                     Spacer(Modifier.height(16.dp))
 
-                    Row(modifier = modifier.fillMaxWidth().padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(value = userSearch,
-                            onValueChange = { userSearch = it },
-                            placeholder = { Text("Search a brand, product, or ingredient") },
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        Button(onClick = {
-                            val searchQuery = userSearch.trim()
-                            if (searchQuery.isNotBlank()) {
-                                viewModel.searchProducts(searchQuery)
-                                chemicalsViewModel.searchChemicals(searchQuery)
+//                    Row(modifier = modifier.fillMaxWidth().padding(16.dp),
+//                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        OutlinedTextField(value = userSearch,
+//                            onValueChange = { userSearch = it },
+//                            placeholder = { Text("Search a brand, product, or ingredient") },
+//                            modifier = Modifier.weight(1f)
+//                        )
+//
+//                        Button(onClick = {
+//                            val searchQuery = userSearch.trim()
+//                            if (searchQuery.isNotBlank()) {
+//                                viewModel.searchProducts(searchQuery)
+//                                chemicalsViewModel.searchChemicals(searchQuery)
+//                            }
+//                        }) {
+//                            Text("Go")
+//                        }
+//                    }
+                    OutlinedTextField(
+                        value = userSearch,
+                        onValueChange = { userSearch = it },
+                        placeholder = { Text("Search for products or ingredients") },
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                val searchQuery = userSearch.trim()
+                                if (searchQuery.isNotBlank()) {
+                                    viewModel.searchProducts(searchQuery)
+                                    chemicalsViewModel.searchChemicals(searchQuery)
+                                }
+                            }) {
+                                Icon(Icons.Default.Search, contentDescription = "Search")
                             }
-                        }) {
-                            Text("Go")
-                        }
-                        // Button for skin tip
-                        FloatingActionButton(
-                            onClick = { showInfo = true },
-                            modifier = Modifier
-                            //.padding(16.dp)
-                        ) {
-                            Text("Skin Tips")
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                    )
+
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // Button for skin tip
+                    FloatingActionButton(containerColor = MaterialTheme.colorScheme.primary,
+                        onClick = { showInfo = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                            Icon(imageVector = Icons.Default.Checklist, contentDescription = "Skin Tips", tint = MaterialTheme.colorScheme.background)
+                            Text("  Skin Tips")
                         }
                     }
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(16.dp))
 
                     if (resultsLoading) {
                         CircularProgressIndicator()
@@ -384,11 +399,8 @@ fun ScanOrSearchScreen(
                             .clickable { showInfo = false } // dismiss when tapping outside
                     ){
                         // skin info card
-                        Card(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .fillMaxWidth(0.9f)
-                                .wrapContentHeight(),
+                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            modifier = Modifier.align(Alignment.Center).fillMaxWidth(0.9f).wrapContentHeight(),
                             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                         ) {
                             val goodRecs = when (skinType) {

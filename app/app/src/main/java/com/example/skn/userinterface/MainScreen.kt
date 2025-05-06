@@ -47,7 +47,7 @@ fun MainScreen(
 
     LaunchedEffect(submitted) {
         if (submitted) {
-            snackbarHostState.showSnackbar("✅ Product submitted successfully")
+            snackbarHostState.showSnackbar("Product submitted successfully")
         }
     }
 
