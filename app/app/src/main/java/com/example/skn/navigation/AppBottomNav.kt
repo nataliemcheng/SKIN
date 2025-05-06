@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -31,21 +32,24 @@ fun AppBottomNavigation(
     onScanClick: () -> Unit,
     onProfileClick: () -> Unit,
 ) {
-    NavigationBar {
+    val navItemColors = NavigationBarItemDefaults.colors(
+        selectedIconColor   = MaterialTheme.colorScheme.primary,
+        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        indicatorColor      = MaterialTheme.colorScheme.secondaryContainer  // ← your new “selected” pill
+    )
+    NavigationBar(
+    ) {
         NavigationBarItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
             selected = selectedTab == NavigationTab.HOME,
             onClick = onHomeClick,
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.Black,
-                unselectedIconColor = Color.Black,
-                indicatorColor = Color.Transparent
-            )
+            colors   = navItemColors
         )
         NavigationBarItem(
             icon = { Icon(Icons.Default.Search, contentDescription = "Search") },
             selected = selectedTab == NavigationTab.SEARCH,
             onClick = onSearchClick
+
         )
         // Camera/Scan (center icon)
         NavigationBarItem(

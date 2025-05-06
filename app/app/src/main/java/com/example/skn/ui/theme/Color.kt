@@ -2,9 +2,9 @@ package com.example.skn.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val PrimaryColor = Color(0xFF352208)
+val PrimaryColor = Color(0xFF816D62)
 val SecondaryColor = Color(0xFFC6AC8F)
-val TertiaryColor = Color(0xFF22333B)
+val TertiaryColor = Color(0xFF3F3F42)
 val BackgroundColor = Color(0xFFEAE0D5)
 val SurfaceColor = Color(0xFFDCC9B6)
 val OnPrimaryColor = Color(0xFFEAE0D5)
