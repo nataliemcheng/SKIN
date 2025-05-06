@@ -50,17 +50,22 @@ class ProductViewModel : ViewModel() {
     }
 
     fun toggleFavorite(product: Product) {
-        val updatedList = _favoriteProducts.value.toMutableList()
-        if (updatedList.contains(product)) {
-            updatedList.remove(product)
-            _favoriteProducts.value = updatedList
+        val current = _favoriteProducts.value.toMutableList()
+        val exists = current.any { it.id == product.id }
+
+        if (exists) {
+            current.removeAll { it.id == product.id }
+            // Also remove from Firestore
             removeFavoriteFromFirestore(product.id)
         } else {
-            updatedList.add(product)
-            _favoriteProducts.value = updatedList
+            current.add(product)
+            // Also add to Firestore
             addFavoriteToFirestore(product)
         }
+
+        _favoriteProducts.value = current
     }
+
 
     private fun addFavoriteToFirestore(product: Product) {
         val db = Firebase.firestore
@@ -124,21 +129,21 @@ class ProductViewModel : ViewModel() {
     }
 
     private fun removeFavoriteFromFirestore(productId: Int) {
-        val db = Firebase.firestore
         val userId = getCurrentUserId() ?: return
+        val db = Firebase.firestore
 
         db.collection("user_activity")
             .document(userId)
             .collection("favorites")
-            .document(productId.toString())
-            .delete()
-            .addOnSuccessListener {
-                Log.d("Favorites", "🗑Removed productId=$productId from favorites")
-            }
-            .addOnFailureListener {
-                Log.e("Favorites", "Failed to remove favorite", it)
+            .whereEqualTo("productId", productId)
+            .get()
+            .addOnSuccessListener { query ->
+                for (doc in query) {
+                    doc.reference.delete()
+                }
             }
     }
+
 
 
     fun fetchAllProducts() {
@@ -290,10 +295,6 @@ class ProductViewModel : ViewModel() {
                 _products.value = distinctResults
                 _recentlySearched.value = (_recentlySearched.value + distinctResults).distinctBy { it.id }.takeLast(10)
 
-                distinctResults.firstOrNull()?.let { product ->
-                    logSearchQueryToFirebase(product)
-                }
-
                 _error.value = if (distinctResults.isEmpty()) "No products found for '$query'" else null
 
             } catch (e: Exception) {
@@ -402,7 +403,7 @@ class ProductViewModel : ViewModel() {
 
     }
 
-    private fun logSearchQueryToFirebase(product: Product) {
+    fun logSearchQueryToFirebase(product: Product) {
         val db = Firebase.firestore
         val userId = getCurrentUserId() ?: return
 
@@ -417,20 +418,40 @@ class ProductViewModel : ViewModel() {
             "type" to "search"
         )
 
-        db.collection("user_activity")
+        val searchHistoryRef = db.collection("user_activity")
             .document(userId)
             .collection("search_history")
-            .add(data)
-            .addOnSuccessListener {
-                Log.d("Firestore", "Logged search for product: ${product.name}")
+
+        // Check for existing search
+        searchHistoryRef
+            .whereEqualTo("productId", product.id)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                if (!querySnapshot.isEmpty) {
+                    // Update existing search's timestamp
+                    val existingDoc = querySnapshot.documents.first()
+                    existingDoc.reference.update("timestamp", data["timestamp"]!!)
+                    Log.d("Firestore", "Updated timestamp for product: ${product.name}")
+                } else {
+                    // Add new search record
+                    searchHistoryRef.add(data)
+                        .addOnSuccessListener {
+                            Log.d("Firestore", "Logged search for product: ${product.name}")
+                        }
+                        .addOnFailureListener {
+                            Log.e("Firestore", "Failed to log product search", it)
+                        }
+                }
             }
             .addOnFailureListener {
-                Log.e("Firestore", "Failed to log product search", it)
+                Log.e("Firestore", "Failed to check for existing search", it)
             }
     }
 
 
-    private fun loadRecentSearchesFromFirebase() {
+
+    fun loadRecentSearchesFromFirebase() {
         val db = Firebase.firestore
         val userId = getCurrentUserId() ?: return
 

@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.rememberAsyncImagePainter
 import com.example.skn.model.Product
 import com.example.skn.viewmodel.AuthViewModel
@@ -103,17 +104,17 @@ fun MainScreen(
                             verticalArrangement = Arrangement.spacedBy(40.dp)
 
                         ) {
-                            Section("Favorites", favorites, true, navController = navController,) { viewModel.toggleFavorite(it) }
-                            Section("Recently Searched", recentlySearched, navController = navController,) { viewModel.toggleFavorite(it) }
+                            Section("Favorites", favorites, navController = navController,)
+                            Section("Recently Searched", recentlySearched, navController = navController,)
                         }
                         VerticalDivider()
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(40.dp)
                         ) {
-                            Section("Popular", popular, navController = navController,) { viewModel.toggleFavorite(it) }
-                            Section("Good for My SKIN", goodForSkin, navController = navController,) { viewModel.toggleSkinTag(it, ProductViewModel.TagType.GOOD) }
-                            Section("Bad for My SKIN", badForSkin, navController = navController,) { viewModel.toggleSkinTag(it,ProductViewModel.TagType.BAD)}
+                            Section("Popular", popular, navController = navController,)
+                            Section("Good for My SKIN", goodForSkin, navController = navController,)
+                            Section("Bad for My SKIN", badForSkin, navController = navController,)
 
                         }
                     }
@@ -124,19 +125,19 @@ fun MainScreen(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         item {
-                            Section("Favorites", favorites, true, navController = navController,) { viewModel.toggleFavorite(it) }
+                            Section("Favorites", favorites, navController = navController,)
                         }
                         item {
-                            Section("Recently Searched", recentlySearched, navController = navController,) { viewModel.toggleFavorite(it) }
+                            Section("Recently Searched", recentlySearched, navController = navController,)
                         }
                         item {
-                            Section("Popular", popular, navController = navController,) { viewModel.toggleFavorite(it) }
+                            Section("Popular", popular, navController = navController,)
                         }
                         item {
-                            Section("Good for My SKIN", goodForSkin, navController = navController,) { viewModel.toggleSkinTag(it, ProductViewModel.TagType.GOOD) }
+                            Section("Good for My SKIN", goodForSkin, navController = navController,)
                         }
                         item {
-                            Section("Bad for My SKIN", badForSkin, navController = navController,) { viewModel.toggleSkinTag(it,ProductViewModel.TagType.BAD)}
+                            Section("Bad for My SKIN", badForSkin, navController = navController,)
                         }
                         }
                     }
@@ -152,9 +153,7 @@ fun MainScreen(
 fun Section(
     title: String,
     items: List<Product>,
-    isFavoriteSection: Boolean = false,
-    navController: NavHostController,
-    onToggleFavorite: (Product) -> Unit // ← no question mark
+    navController: NavHostController
 ) {
     var expandedProduct by remember { mutableStateOf<Product?>(null) }
 
@@ -189,19 +188,6 @@ fun Section(
                         maxLines = 2,
                         style = MaterialTheme.typography.bodyMedium
                     )
-
-                    if (expandedProduct == product && isFavoriteSection) {
-                        Spacer(Modifier.height(6.dp))
-
-                        Button(
-                            onClick = { onToggleFavorite(product) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer
-                            )
-                        ) {
-                            Text("Unfavorite")
-                        }
-                    }
                 }
             }
         }
@@ -209,6 +195,7 @@ fun Section(
         Spacer(Modifier.height(24.dp))
     }
 }
+
 
 
 

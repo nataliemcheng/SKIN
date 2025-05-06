@@ -140,7 +140,11 @@ fun AppNavGraph(
                 ProductDetailScreen(
                     productId = productId,
                     viewModel = productViewModel,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = {
+                        productViewModel.loadRecentSearchesFromFirebase()  // reload recent data
+                        navController.popBackStack()                       // then go back
+                    }
+
                 )
             }
         }

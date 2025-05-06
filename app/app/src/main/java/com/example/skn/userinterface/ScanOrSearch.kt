@@ -170,6 +170,7 @@ fun ScanOrSearchScreen(
 
                         when (selectedTabIndex) {
                             0 -> if (products.isNotEmpty()) ProductResults(
+                                viewModel = viewModel,
                                 products = products,
                                 favorites = favoriteProducts,
                                 skinTags = skinTags,
@@ -242,6 +243,7 @@ fun ScanOrSearchScreen(
 
                     when (selectedTabIndex) {
                         0 -> if (products.isNotEmpty()) ProductResults(
+                                viewModel = viewModel,
                                 products = products,
                                 favorites = favoriteProducts,
                                 skinTags = skinTags,

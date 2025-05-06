@@ -1,5 +1,6 @@
 package com.example.skn.userinterface
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,6 +28,7 @@ import androidx.navigation.NavHostController
 
 @Composable
 fun ProductResults(
+    viewModel: ProductViewModel,
     products: List<Product>,
     favorites: List<Product>,
     skinTags: Map<Int, ProductViewModel.TagType>,
@@ -38,7 +40,12 @@ fun ProductResults(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         items(products) { product ->
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { navController.navigate("product/${product.id}") }
+            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable {
+                Log.d("SearchLog", "Clicked product: id=${product.id}, name=${product.name}, brand=${product.brand}")
+
+                viewModel.logSearchQueryToFirebase(product)
+                viewModel.loadRecentSearchesFromFirebase()
+                navController.navigate("product/${product.id}") }
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
