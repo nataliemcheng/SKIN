@@ -2,12 +2,14 @@ package com.example.skn.userinterface
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,11 +35,13 @@ import com.example.skn.viewmodel.ProductViewModel
 import com.example.skn.viewmodel.ChemicalsViewModel
 import com.example.skn.navigation.AppBottomNavigation
 import com.example.skn.navigation.NavigationTab
+import com.example.skn.viewmodel.UserProfileViewModel
 
 @Composable
 fun ScanOrSearchScreen(
     viewModel: ProductViewModel,
     chemicalsViewModel: ChemicalsViewModel,
+    profileViewModel: UserProfileViewModel,
     navController: NavHostController,
     onBackClick: () -> Unit,
     onScanClick: () -> Unit = {},
@@ -69,6 +73,10 @@ fun ScanOrSearchScreen(
     val resultsLoading = productsLoading || chemicalsLoading
 
     var selectedTab by remember { mutableStateOf(NavigationTab.SEARCH) }
+
+    val userProfile by profileViewModel.userProfile.collectAsState()
+    val skinType    = userProfile?.skinType ?: "Unknown"
+    var showInfo by remember { mutableStateOf(false) }
 
     LaunchedEffect(scannedBarcode) {
         scannedBarcode?.let {
@@ -114,7 +122,8 @@ fun ScanOrSearchScreen(
                     ) {
                         Spacer(Modifier.height(24.dp))
 
-                        OutlinedTextField(value = userSearch,
+                        OutlinedTextField(
+                            value = userSearch,
                             onValueChange = { userSearch = it },
                             placeholder = { Text("Search a brand, product, or ingredient") },
                             modifier = Modifier
@@ -133,21 +142,43 @@ fun ScanOrSearchScreen(
                             Text("Go")
                         }
 
-                        Spacer(Modifier.height(24.dp))
+                        // Button for skin tip
+                        FloatingActionButton(
+                            onClick = { showInfo = true },
+                            modifier = Modifier
+                                //.padding(16.dp)
+                        ) {
+                            Text("Skin Tips")
+                        }
+
                     }
+
+                    Spacer(Modifier.height(24.dp))
 
                     // Right pane: results
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight()
+                            .fillMaxHeight(),
                     ) {
                         if (resultsLoading) {
                             CircularProgressIndicator()
                         } else {
-                            if (productsError != null) { Text("Product error: $productsError", color = MaterialTheme.colorScheme.error) }
-                            if (chemicalsError != null) { Text("Ingredients error: $chemicalsError", color = MaterialTheme.colorScheme.error) }
-                            if (products.isEmpty() && chemicals.isEmpty()) { Text("No results found.") }
+                            if (productsError != null) {
+                                Text(
+                                    "Product error: $productsError",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            if (chemicalsError != null) {
+                                Text(
+                                    "Ingredients error: $chemicalsError",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            if (products.isEmpty() && chemicals.isEmpty()) {
+                                Text("No results found.")
+                            }
                         }
 
                         val tabs = listOf("Products", "Ingredients")
@@ -161,7 +192,10 @@ fun ScanOrSearchScreen(
                                 )
                             }) {
                             tabs.forEachIndexed { index, title ->
-                                Tab(text = { Text(title) }, selected = selectedTabIndex == index, onClick = { selectedTabIndex = index })
+                                Tab(
+                                    text = { Text(title) },
+                                    selected = selectedTabIndex == index,
+                                    onClick = { selectedTabIndex = index })
                             }
                         }
 
@@ -175,15 +209,93 @@ fun ScanOrSearchScreen(
                                 favorites = favoriteProducts,
                                 skinTags = skinTags,
                                 onToggleFavorite = { product -> viewModel.toggleFavorite(product) },
-                                onToggleTag = { product, tagType -> viewModel.toggleSkinTag(product, tagType) },
-                                navController = navController)
+                                onToggleTag = { product, tagType ->
+                                    viewModel.toggleSkinTag(
+                                        product,
+                                        tagType
+                                    )
+                                },
+                                navController = navController
+                            )
+
                             1 -> if (chemicals.isNotEmpty()) IngredientResults(chemicals)
                         }
-
-
                     }
+                    if (showInfo) {
+                        // backdrop
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.5f))
+                                .clickable { showInfo = false } // dismiss when tapping outside
+                        ){
+                            // skin info card
+                        Card(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .fillMaxWidth(0.9f)
+                                .wrapContentHeight(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                        ) {
+                            val goodRecs = when (skinType) {
+                                "Oily"        -> listOf("Salicylic Acid", "Niacinamide", "Clay")
+                                "Dry"         -> listOf("Hyaluronic Acid", "Ceramides", "Glycerin")
+                                "Combination" -> listOf("Niacinamide", "Hyaluronic Acid")
+                                "Sensitive"   -> listOf("Aloe Vera", "Centella Asiatica")
+                                else          -> listOf("Vitamin C", "Ceramides")
+                            }
+                            val avoidRecs = when (skinType) {
+                                "Oily"        -> listOf("Heavy Oils", "Silicones", "Alcohol")
+                                "Dry"         -> listOf("Sulfates", "Fragrance", "Retinoids (initially)")
+                                "Combination" -> listOf("Alcohol", "Harsh Exfoliants")
+                                "Sensitive"   -> listOf("Fragrance", "Essential Oils", "AHA/BHA (high %)")
+                                else          -> listOf("Parabens", "Phthalates", "Formaldehyde")
+                            }
+
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    "Good for $skinType skin",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                goodRecs.forEach {
+                                    Text(
+                                        "• $it",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+
+                                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
+                                Text(
+                                    "Avoid for $skinType skin",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                avoidRecs.forEach {
+                                    Text(
+                                        "• $it",
+                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    )
+                                }
+
+                                Spacer(Modifier.height(12.dp))
+
+                                Button(
+                                    onClick = { showInfo = false },
+                                    modifier = Modifier.align(Alignment.End)
+                                ) {
+                                    Text("Close")
+                                }
+                            }
+                            }
+                        }
+                    } //
                 }
-            }
+        }
             // Portrait mode
             else {
                 Column(modifier = modifier
@@ -210,6 +322,14 @@ fun ScanOrSearchScreen(
                             }
                         }) {
                             Text("Go")
+                        }
+                        // Button for skin tip
+                        FloatingActionButton(
+                            onClick = { showInfo = true },
+                            modifier = Modifier
+                            //.padding(16.dp)
+                        ) {
+                            Text("Skin Tips")
                         }
                     }
 
@@ -254,6 +374,79 @@ fun ScanOrSearchScreen(
                     }
 
 
+                }
+                if (showInfo) {
+                    // backdrop
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f))
+                            .clickable { showInfo = false } // dismiss when tapping outside
+                    ){
+                        // skin info card
+                        Card(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .fillMaxWidth(0.9f)
+                                .wrapContentHeight(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                        ) {
+                            val goodRecs = when (skinType) {
+                                "Oily"        -> listOf("Salicylic Acid", "Niacinamide", "Clay")
+                                "Dry"         -> listOf("Hyaluronic Acid", "Ceramides", "Glycerin")
+                                "Combination" -> listOf("Niacinamide", "Hyaluronic Acid")
+                                "Sensitive"   -> listOf("Aloe Vera", "Centella Asiatica")
+                                else          -> listOf("Vitamin C", "Ceramides")
+                            }
+                            val avoidRecs = when (skinType) {
+                                "Oily"        -> listOf("Heavy Oils", "Silicones", "Alcohol")
+                                "Dry"         -> listOf("Sulfates", "Fragrance", "Retinoids (initially)")
+                                "Combination" -> listOf("Alcohol", "Harsh Exfoliants")
+                                "Sensitive"   -> listOf("Fragrance", "Essential Oils", "AHA/BHA (high %)")
+                                else          -> listOf("Parabens", "Phthalates", "Formaldehyde")
+                            }
+
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    "Good for $skinType skin",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                goodRecs.forEach {
+                                    Text(
+                                        "• $it",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+
+                                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+
+                                Text(
+                                    "Avoid for $skinType skin",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                avoidRecs.forEach {
+                                    Text(
+                                        "• $it",
+                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    )
+                                }
+
+                                Spacer(Modifier.height(12.dp))
+
+                                Button(
+                                    onClick = { showInfo = false },
+                                    modifier = Modifier.align(Alignment.End)
+                                ) {
+                                    Text("Close")
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
