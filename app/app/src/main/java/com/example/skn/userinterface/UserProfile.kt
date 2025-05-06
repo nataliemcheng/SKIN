@@ -5,7 +5,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -78,57 +81,87 @@ fun UserProfileScreen(
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Edit Profile") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Your Profile") }
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = { AppBottomNavigation(selectedTab = selectedTab,
-                onHomeClick = { selectedTab = NavigationTab.HOME
-                    onHomeClick() },
-                onSearchClick = { selectedTab = NavigationTab.SEARCH
-                    onSearchClick() },
-                onScanClick = { selectedTab = NavigationTab.SCAN
-                    onScanClick() },
-                onProfileClick = { selectedTab = NavigationTab.PROFILE},
-
+        bottomBar = {
+            AppBottomNavigation(
+                selectedTab = selectedTab,
+                onHomeClick = {
+                    selectedTab = NavigationTab.HOME
+                    onHomeClick()
+                },
+                onSearchClick = {
+                    selectedTab = NavigationTab.SEARCH
+                    onSearchClick()
+                },
+                onScanClick = {
+                    selectedTab = NavigationTab.SCAN
+                    onScanClick()
+                },
+                onProfileClick = {
+                    selectedTab = NavigationTab.PROFILE
+                }
             )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
         ) {
             if (profile != null) {
-                UserProfileCard(
-                    profile = profile,
+                // Profile header section with edit button
+                ProfileHeaderSection(
+                    profile = profile!!,
                     isEditing = isEditing,
-                    isChangingPassword = isChangingPassword,
-                    email = profile!!.email,
-                    firstName = firstName,
-                    lastName = lastName,
-                    skinType = skinType,
-                    skinConcerns = skinConcerns,
-                    onFirstNameChange = { firstName = it },
-                    onLastNameChange = { lastName = it },
-                    onSkinTypeChange = { skinType = it },
-                    onSkinConcernsChange = { skinConcerns = it },
-                    onToggleEdit = { isEditing = !isEditing },
-                    onTogglePasswordChange = { isChangingPassword = !isChangingPassword },
-                    onSaveProfile = {
-                        profileViewModel.updateProfile(
-                            firstName = firstName,
-                            lastName = lastName,
-                            skinType = skinType,
-                            skinConcerns = skinConcerns
-                        )
-                    }
+                    onToggleEdit = { isEditing = !isEditing }
                 )
 
-                Spacer(Modifier.height(16.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+                if (isEditing) {
+                    // Edit mode for profile info
+                    ProfileEditSection(
+                        firstName = firstName,
+                        lastName = lastName,
+                        skinType = skinType,
+                        skinConcerns = skinConcerns,
+                        onFirstNameChange = { firstName = it },
+                        onLastNameChange = { lastName = it },
+                        onSkinTypeChange = { skinType = it },
+                        onSkinConcernsChange = { skinConcerns = it },
+                        onSaveProfile = {
+                            profileViewModel.updateProfile(
+                                firstName = firstName,
+                                lastName = lastName,
+                                skinType = skinType,
+                                skinConcerns = skinConcerns
+                            )
+                        }
+                    )
+                } else {
+                    // View mode - display profile info
+                    ProfileInfoSection(profile = profile!!)
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+                // Security section with change password button
+                SecuritySection(
+                    isChangingPassword = isChangingPassword,
+                    onTogglePasswordChange = { isChangingPassword = !isChangingPassword }
+                )
 
                 if (isChangingPassword) {
-                    PasswordChangeCard(
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    PasswordChangeSection(
                         currentPassword = currentPassword,
                         newPassword = newPassword,
                         confirmNewPassword = confirmNewPassword,
@@ -143,7 +176,7 @@ fun UserProfileScreen(
                             if (newPassword != confirmNewPassword) {
                                 passwordErrorMessage = "Passwords do not match"
                                 passwordSuccessMessage = null
-                                return@PasswordChangeCard
+                                return@PasswordChangeSection
                             }
 
                             // Call authViewModel to update password
@@ -172,40 +205,147 @@ fun UserProfileScreen(
                         }
                     )
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Alternate logout option at bottom
+                OutlinedButton(
+                    onClick = {
+                        authViewModel.logout()
+                        onLogout()
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Logout")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
             } else {
                 // Loading
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = {
-                    authViewModel.logout()
-                    onLogout()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
-                )
-            ) {
-                Text("Logout")
-            }
-
         }
     }
 }
 
+@Composable
+fun ProfileHeaderSection(
+    profile: UserProfile,
+    isEditing: Boolean,
+    onToggleEdit: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                "${profile.firstName} ${profile.lastName}",
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Text(
+                profile.email,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        IconButton(onClick = onToggleEdit) {
+            Icon(
+                Icons.Default.Edit,
+                contentDescription = if (isEditing) "Cancel Editing" else "Edit Profile",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
 
 @Composable
-fun UserProfileCard(
-    profile: UserProfile?,
-    isEditing: Boolean,
-    isChangingPassword: Boolean,
-    email: String,
+fun ProfileInfoSection(profile: UserProfile) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            "Profile Information",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        if (!profile.skinType.isNullOrBlank() || !profile.skinConcerns.isNullOrEmpty()) {
+            if (!profile.skinType.isNullOrBlank()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Skin Type",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        profile.skinType,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
+            if (!profile.skinConcerns.isNullOrEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        "Skin Concerns",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        profile.skinConcerns.joinToString(", "),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End
+                    )
+                }
+            }
+        } else {
+            Text(
+                "No profile information available. Click the edit button to add your details.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun ProfileEditSection(
     firstName: String,
     lastName: String,
     skinType: String,
@@ -214,117 +354,83 @@ fun UserProfileCard(
     onLastNameChange: (String) -> Unit,
     onSkinTypeChange: (String) -> Unit,
     onSkinConcernsChange: (List<String>) -> Unit,
-    onToggleEdit: () -> Unit,
-    onTogglePasswordChange: () -> Unit,
-    onSaveProfile: () -> Unit,
-    modifier: Modifier = Modifier.fillMaxWidth()
+    onSaveProfile: () -> Unit
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Header & edit button
+        Text(
+            "Edit Profile",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        OutlinedTextField(
+            value = firstName,
+            onValueChange = onFirstNameChange,
+            label = { Text("First Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = lastName,
+            onValueChange = onLastNameChange,
+            label = { Text("Last Name") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        SkinTypeDropdown(
+            options = listOf("Dry", "Oily", "Combination", "Normal", "Sensitive"),
+            selected = skinType,
+            onSelectionChange = onSkinTypeChange,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        MultiSelectSkinConcernDropdown(
+            options = listOf("Acne", "Dryness", "Sun Damage", "Hyperpigmentation"),
+            selected = skinConcerns,
+            onSelectionChange = onSkinConcernsChange,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Button(
+            onClick = onSaveProfile,
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("Save Changes")
+        }
+    }
+}
+
+@Composable
+fun SecuritySection(
+    isChangingPassword: Boolean,
+    onTogglePasswordChange: () -> Unit
+) {
+    Column {
+        Text(
+            "Security",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = onTogglePasswordChange,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text("User Profile", style = MaterialTheme.typography.titleMedium)
-                IconButton(onClick = onToggleEdit) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = if (isEditing) "Cancel Editing" else "Edit Profile"
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Show email
-            Text("Email: ${email}", style = MaterialTheme.typography.bodyMedium)
-
-            Spacer(Modifier.height(16.dp))
-
-            // If in edit mode, show editable fields
-            if (isEditing) {
-                OutlinedTextField(
-                    value = firstName,
-                    onValueChange = onFirstNameChange,
-                    label = { Text("First Name") },
-                    modifier = Modifier.fillMaxWidth()
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
                 )
-
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = lastName,
-                    onValueChange = onLastNameChange,
-                    label = { Text("Last Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(Modifier.height(8.dp))
-                SkinTypeDropdown(
-                    options = listOf("Dry", "Oily", "Combination", "Normal","Sensitive"),
-                    selected = skinType,
-                    onSelectionChange = onSkinTypeChange,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                MultiSelectSkinConcernDropdown(
-                    options           = listOf("Acne", "Dryness", "Sun Damage", "Hyperpigmentation"),
-                    selected          = skinConcerns,
-                    onSelectionChange = onSkinConcernsChange,
-                    label             = "Skin Concerns",
-                    modifier          = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                )
-
-
-                Spacer(Modifier.height(16.dp))
-
-                Button(onClick = onSaveProfile, modifier = Modifier.align(Alignment.End)) {
-                    Text("Save Changes")
-                }
-            } else {
-                // View mode -> display profile information
-                if (profile != null && (profile.firstName.isNotBlank() || profile.lastName.isNotBlank() ||
-                            !profile.skinType.isNullOrBlank() || !profile.skinConcerns.isNullOrEmpty())) {
-
-                    if (profile.firstName.isNotBlank() || profile.lastName.isNotBlank()) {
-                        Text("Name: ${profile.firstName} ${profile.lastName}", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(Modifier.height(8.dp))
-                    }
-
-                    if (!profile.skinType.isNullOrBlank()) {
-                        Text("Skin Type: ${profile.skinType}", style = MaterialTheme.typography.bodyMedium)
-                        Spacer(Modifier.height(8.dp))
-                    }
-
-                    if (!profile.skinConcerns.isNullOrEmpty()) {
-                        Text(
-                            "Skin Concerns: ${profile.skinConcerns.joinToString(", ")}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                } else {
-                    Text(
-                        "No profile information available. Click the edit button to add your details.",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            // Password change button
-            Button(onClick = onTogglePasswordChange,
-                modifier = Modifier.align(Alignment.End).padding(top = 16.dp)
-            ) {
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(if (isChangingPassword) "Cancel" else "Change Password")
             }
         }
@@ -332,7 +438,7 @@ fun UserProfileCard(
 }
 
 @Composable
-fun PasswordChangeCard(
+fun PasswordChangeSection(
     currentPassword: String,
     newPassword: String,
     confirmNewPassword: String,
@@ -342,15 +448,17 @@ fun PasswordChangeCard(
     onCurrentPasswordChange: (String) -> Unit,
     onNewPasswordChange: (String) -> Unit,
     onConfirmNewPasswordChange: (String) -> Unit,
-    onUpdatePassword: () -> Unit,
-    modifier: Modifier = Modifier.fillMaxWidth()
+    onUpdatePassword: () -> Unit
 ) {
-    Card(modifier = modifier) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Change Password", style = MaterialTheme.typography.titleMedium)
-
-            Spacer(Modifier.height(16.dp))
-
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             OutlinedTextField(
                 value = currentPassword,
                 onValueChange = onCurrentPasswordChange,
@@ -360,8 +468,6 @@ fun PasswordChangeCard(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
-
-            Spacer(Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = newPassword,
@@ -373,8 +479,6 @@ fun PasswordChangeCard(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
-            Spacer(Modifier.height(8.dp))
-
             OutlinedTextField(
                 value = confirmNewPassword,
                 onValueChange = onConfirmNewPasswordChange,
@@ -385,14 +489,11 @@ fun PasswordChangeCard(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
-            Spacer(Modifier.height(16.dp))
-
             errorMessage?.let {
                 Text(
                     text = it,
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -400,23 +501,22 @@ fun PasswordChangeCard(
                 Text(
                     text = it,
                     color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+            Button(
+                onClick = onUpdatePassword,
+                modifier = Modifier.align(Alignment.End),
+                enabled = !isLoading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Button(onClick = onUpdatePassword) {
-                        Text("Update Password")
-                    }
+                    Text("Update Password")
                 }
             }
         }
@@ -484,31 +584,31 @@ fun SkinTypeDropdown(
     onSelectionChange: (String) -> Unit,
     label: String = "Skin Type",
     modifier: Modifier = Modifier
-){
-    var expanded by remember { mutableStateOf(false)}
+) {
+    var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = {expanded = !expanded},
+        onExpandedChange = { expanded = !expanded },
         modifier = modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
             value = selected,
-            onValueChange = {/* read only */},
+            onValueChange = { /* read only */ },
             readOnly = true,
-            label = {Text(label)},
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded)},
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false}
+            onDismissRequest = { expanded = false }
         ) {
-            options.forEach {option ->
+            options.forEach { option ->
                 DropdownMenuItem(
-                    text = {Text(option)},
+                    text = { Text(option) },
                     onClick = {
                         onSelectionChange(option)
                         expanded = false
