@@ -1,15 +1,21 @@
 package com.example.skn.userinterface
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -36,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -207,6 +215,8 @@ fun NameCard(
 fun SkinTypeCard(skinType: String, onSkinTypeChange: (String) -> Unit, onNext: () -> Unit) {
     val skinTypes = listOf("Dry", "Oily", "Combination", "Normal", "Sensitive")
     var selectedIndex by remember { mutableIntStateOf(skinTypes.indexOf(skinType).takeIf { it >= 0 } ?: 0) }
+    val primary   = MaterialTheme.colorScheme.primary
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
 
     Card(
         modifier = Modifier.padding(24.dp).fillMaxWidth(),
@@ -214,7 +224,8 @@ fun SkinTypeCard(skinType: String, onSkinTypeChange: (String) -> Unit, onNext: (
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier
+                .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -222,17 +233,46 @@ fun SkinTypeCard(skinType: String, onSkinTypeChange: (String) -> Unit, onNext: (
             Text("This helps us tailor recommendations for you.", style = MaterialTheme.typography.bodySmall)
             Text("You can always change this later.", style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
 
-            SingleChoiceSegmentedButtonRow {
-                skinTypes.forEachIndexed { index, type ->
-                    SegmentedButton(
-                        shape = SegmentedButtonDefaults.itemShape(index, skinTypes.size),
-                        onClick = {
-                            selectedIndex = index
-                            onSkinTypeChange(type)
-                        },
-                        selected = index == selectedIndex,
-                        label = { Text(type) }
-                    )
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ){
+                    skinTypes.forEachIndexed(){
+                        index, type ->
+                        val isSelected = index == selectedIndex
+
+                        OutlinedButton(
+                            onClick = {
+                                selectedIndex = index
+                                onSkinTypeChange(type)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            border = BorderStroke(
+                                width = if(isSelected) 0.dp else 1.dp,
+                                color = primary
+                            ),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                // fill with primary color when selected
+                                containerColor = if (isSelected)
+                                    MaterialTheme.colorScheme.primary.copy(alpha= 0.3f)
+                                else
+                                    Color.Transparent,
+                                // text color
+                                contentColor = if (isSelected) onPrimary else primary
+                            )
+,                        ) {
+                            Text(type)
+                        }
+                    }
                 }
             }
 
@@ -257,6 +297,8 @@ fun SkinConcernsCard(
     val selectedOptions = remember {
         mutableStateListOf(*skinConcernsList.map { it in skinConcerns }.toTypedArray())
     }
+    val primary   = MaterialTheme.colorScheme.primary
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
 
     Card(
         modifier = Modifier.padding(24.dp).fillMaxWidth(),
@@ -266,26 +308,41 @@ fun SkinConcernsCard(
         Column(
             modifier = Modifier.padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text("Select your skin concerns", style = MaterialTheme.typography.headlineSmall)
             Text("Choose all that apply. You can update this later.", style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
 
-            MultiChoiceSegmentedButtonRow {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ){
                 skinConcernsList.forEachIndexed { index, concern ->
-                    SegmentedButton(
-                        shape = SegmentedButtonDefaults.itemShape(index, skinConcernsList.size),
-                        checked = selectedOptions[index],
-                        onCheckedChange = {
-                            selectedOptions[index] = !selectedOptions[index]
-                            val updated = skinConcernsList.filterIndexed { i, _ -> selectedOptions[i] }
-                            onSkinConcernsChange(updated)
+                    val isSelected = selectedOptions[index]
+                    OutlinedButton(
+                        onClick = {
+                            selectedOptions[index] = !isSelected
+                            onSkinConcernsChange(
+                                skinConcernsList.filterIndexed{i, _ -> selectedOptions[i]}
+                            )
                         },
-                        icon = { SegmentedButtonDefaults.Icon(selectedOptions[index]) },
-                        label = { Text(concern) }
-                    )
+                        modifier =  Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = if (isSelected)
+                            MaterialTheme.colorScheme.primary.copy(alpha= 0.3f)
+                            else
+                                Color.Transparent,
+                            contentColor = if (isSelected) onPrimary else primary
+                        )
+                    ) { Text(concern)}
                 }
             }
+
 
             Button(onClick = onFinish) {
                 Text("Finish")
