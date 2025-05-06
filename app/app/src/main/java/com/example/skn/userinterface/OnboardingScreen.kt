@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -44,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -71,6 +75,10 @@ fun OnBoardingScreen(
     var lastName by remember { mutableStateOf("") }
     var skinType by remember { mutableStateOf("") }
     var skinConcerns by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // to determine if phone or tablet
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val isTablet = screenWidthDp >= 600
 
     // Only navigate when profile update is successful AND we've reached the final step
     LaunchedEffect(profileUpdateSuccess, currentStep) {
@@ -109,11 +117,12 @@ fun OnBoardingScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(innerPadding),
+            contentAlignment = Alignment.Center
         ){
             Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
@@ -123,17 +132,45 @@ fun OnBoardingScreen(
                     Text("Saving your profile...", style = MaterialTheme.typography.bodyMedium)
                 } else {
                     when (currentStep) {
-                        0 -> WelcomeCard(onNext = { currentStep++ })
-                        1 -> NameCard(firstName = firstName, lastName = lastName, onFirstNameChange = { firstName = it }, onLastNameChange = { lastName = it }, onNext = { currentStep++ })
-                        2 -> SkinTypeCard(skinType = skinType, onSkinTypeChange = { skinType = it }, onNext = { currentStep++ })
-                        3 -> SkinConcernsCard(skinConcerns = skinConcerns, onSkinConcernsChange = { skinConcerns = it },
-                            onFinish = {
-                                profileViewModel.updateProfile(firstName = firstName, lastName = lastName,
-                                    skinType = skinType, skinConcerns = skinConcerns
+                        0 ->Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            WelcomeCard(onNext = { currentStep++ })
+                        }
+                        1 ->Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ){NameCard(firstName = firstName, lastName = lastName, onFirstNameChange = { firstName = it }, onLastNameChange = { lastName = it }, onNext = { currentStep++ })}
+                        2 -> {if(isTablet){SkinTypeCardTablet(skinType = skinType, onSkinTypeChange = { skinType = it }, onNext = { currentStep++ })}
+                            else{
+                            SkinTypeCard(skinType = skinType, onSkinTypeChange = { skinType = it }, onNext = { currentStep++ })
+                            }}
+                        3 -> {
+                            if (isTablet) {
+                                SkinConcernsCardTablet(skinConcerns = skinConcerns,
+                                    onSkinConcernsChange = { skinConcerns = it },
+                                    onFinish = {
+                                        profileViewModel.updateProfile(
+                                            firstName = firstName, lastName = lastName,
+                                            skinType = skinType, skinConcerns = skinConcerns
+                                        )
+                                        currentStep++
+                                    }
                                 )
-                                currentStep++
+                            } else {
+                                SkinConcernsCard(skinConcerns = skinConcerns,
+                                    onSkinConcernsChange = { skinConcerns = it },
+                                    onFinish = {
+                                        profileViewModel.updateProfile(
+                                            firstName = firstName, lastName = lastName,
+                                            skinType = skinType, skinConcerns = skinConcerns
+                                        )
+                                        currentStep++
+                                    }
+                                )
                             }
-                        )
+                        }
                     }
                 }
 
@@ -150,7 +187,7 @@ fun OnBoardingScreen(
 @Composable
 fun WelcomeCard(onNext: () -> Unit) {
     Card(
-        modifier = Modifier.padding(24.dp).fillMaxWidth(),
+        modifier = Modifier.padding(24.dp).fillMaxWidth(0.8f),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
@@ -175,7 +212,7 @@ fun NameCard(
     onFirstNameChange: (String) -> Unit, onLastNameChange: (String) -> Unit
 ) {
     Card(
-        modifier = Modifier.padding(24.dp).fillMaxWidth(),
+        modifier = Modifier.padding(24.dp).widthIn(max = 360.dp).fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
@@ -285,6 +322,49 @@ fun SkinTypeCard(skinType: String, onSkinTypeChange: (String) -> Unit, onNext: (
         }
     }
 }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SkinTypeCardTablet(skinType: String, onSkinTypeChange: (String) -> Unit, onNext: () -> Unit) {
+    val skinTypes = listOf("Dry", "Oily", "Combination", "Normal", "Sensitive")
+    var selectedIndex by remember { mutableIntStateOf(skinTypes.indexOf(skinType).takeIf { it >= 0 } ?: 0) }
+
+    Card(
+        modifier = Modifier.padding(24.dp).fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Choose your skin type", style = MaterialTheme.typography.headlineSmall)
+            Text("This helps us tailor recommendations for you.", style = MaterialTheme.typography.bodySmall)
+            Text("You can always change this later.", style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+
+            SingleChoiceSegmentedButtonRow {
+                skinTypes.forEachIndexed { index, type ->
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(index, skinTypes.size),
+                        onClick = {
+                            selectedIndex = index
+                            onSkinTypeChange(type)
+                        },
+                        selected = index == selectedIndex,
+                        label = { Text(type) }
+                    )
+                }
+            }
+
+            Button(
+                onClick = onNext,
+                enabled = skinType.isNotBlank()
+            ) {
+                Text("Continue")
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -343,6 +423,54 @@ fun SkinConcernsCard(
                 }
             }
 
+
+            Button(onClick = onFinish) {
+                Text("Finish")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SkinConcernsCardTablet(
+    skinConcerns: List<String>,
+    onSkinConcernsChange: (List<String>) -> Unit,
+    onFinish: () -> Unit
+) {
+    val skinConcernsList = listOf("Acne", "Dryness", "Sun Damage", "Hyperpigmentation")
+    val selectedOptions = remember {
+        mutableStateListOf(*skinConcernsList.map { it in skinConcerns }.toTypedArray())
+    }
+
+    Card(
+        modifier = Modifier.padding(24.dp).fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("Select your skin concerns", style = MaterialTheme.typography.headlineSmall)
+            Text("Choose all that apply. You can update this later.", style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
+
+            MultiChoiceSegmentedButtonRow {
+                skinConcernsList.forEachIndexed { index, concern ->
+                    SegmentedButton(
+                        shape = SegmentedButtonDefaults.itemShape(index, skinConcernsList.size),
+                        checked = selectedOptions[index],
+                        onCheckedChange = {
+                            selectedOptions[index] = !selectedOptions[index]
+                            val updated = skinConcernsList.filterIndexed { i, _ -> selectedOptions[i] }
+                            onSkinConcernsChange(updated)
+                        },
+                        icon = { SegmentedButtonDefaults.Icon(selectedOptions[index]) },
+                        label = { Text(concern) }
+                    )
+                }
+            }
 
             Button(onClick = onFinish) {
                 Text("Finish")
