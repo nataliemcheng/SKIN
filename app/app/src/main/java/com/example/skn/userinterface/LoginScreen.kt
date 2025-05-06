@@ -11,11 +11,15 @@ import com.example.skn.viewmodel.AuthViewModel
 
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.example.skn.viewmodel.ProductViewModel
+import com.example.skn.viewmodel.UserProfileViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @Composable
 fun LoginScreen(
     productViewModel: ProductViewModel,
     authViewModel: AuthViewModel,
+    userProfileViewModel: UserProfileViewModel,
     navController: NavHostController,
     onLoginSuccess: () -> Unit
 ) {
@@ -87,6 +91,10 @@ fun LoginScreen(
                         isLoading = false
                         if (success) {
                             errorMessage = null
+
+                            Firebase.auth.currentUser?.let { user ->
+                                userProfileViewModel.setUser(user) // <-- this sets and loads the profile
+                            }
 
                             productViewModel.loadRecentSearchesFromFirebase()
                             productViewModel.loadFavoritesFromFirestore()

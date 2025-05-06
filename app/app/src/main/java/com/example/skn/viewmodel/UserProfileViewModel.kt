@@ -3,6 +3,7 @@ package com.example.skn.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skn.model.UserProfile
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -52,7 +53,7 @@ class UserProfileViewModel : ViewModel()  {
                 val document = docRef.get().await()
 
                 if (document.exists()) {
-                    val profile = document.toObject(UserProfile::class.java) ?: UserProfile(uid = email)
+                    val profile = document.toObject(UserProfile::class.java) ?: UserProfile(email = email)
                     _userProfile.value = profile
                 } else {
                     val newProfile = UserProfile(uid = email)
@@ -149,6 +150,34 @@ class UserProfileViewModel : ViewModel()  {
 
         saveUserProfile(updatedProfile)
     }
+
+    fun setUser(user: FirebaseUser) {
+        val email = user.email ?: return
+
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                _error.value = null
+
+                val docRef = firestore.collection(userCollection).document(email)
+                val document = docRef.get().await()
+
+                if (document.exists()) {
+                    val profile = document.toObject(UserProfile::class.java)
+                    _userProfile.value = profile
+                } else {
+                    val newProfile = UserProfile(email = email, uid = user.uid)
+                    firestore.collection(userCollection).document(email).set(newProfile).await()
+                    _userProfile.value = newProfile
+                }
+            } catch (e: Exception) {
+                _error.value = "Failed to load user: ${e.localizedMessage}"
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
 
 
     // Reset update success status - should be called after navigation completes

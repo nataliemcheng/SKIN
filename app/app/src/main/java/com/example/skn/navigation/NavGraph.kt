@@ -76,6 +76,7 @@ fun AppNavGraph(
             LoginScreen(
                 productViewModel = productViewModel,
                 authViewModel = authViewModel,
+                userProfileViewModel= userProfileViewModel,
                 navController = navController,
                 onLoginSuccess = { navController.navigate("main") {
                     popUpTo("login") { inclusive = true }
