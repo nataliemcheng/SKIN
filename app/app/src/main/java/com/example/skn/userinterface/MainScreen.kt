@@ -196,23 +196,6 @@ fun Section(
     }
 }
 
-
-
-
-@Composable
-fun TutorialCard(text: String) {
-    Card(
-        modifier = Modifier
-            .width(140.dp)
-            .height(100.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-    ) {
-        Column(modifier = Modifier.padding(8.dp)) {
-            Text(text = text, style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
 @Composable
 fun DropdownMenuButton(onLogout: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }

@@ -189,7 +189,7 @@ fun WelcomeCard(onNext: () -> Unit) {
     Card(
         modifier = Modifier.padding(24.dp).fillMaxWidth(0.8f),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -214,7 +214,7 @@ fun NameCard(
     Card(
         modifier = Modifier.padding(24.dp).widthIn(max = 360.dp).fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -258,7 +258,7 @@ fun SkinTypeCard(skinType: String, onSkinTypeChange: (String) -> Unit, onNext: (
     Card(
         modifier = Modifier.padding(24.dp).fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(
             modifier = Modifier
@@ -331,7 +331,7 @@ fun SkinTypeCardTablet(skinType: String, onSkinTypeChange: (String) -> Unit, onN
     Card(
         modifier = Modifier.padding(24.dp).fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -383,7 +383,7 @@ fun SkinConcernsCard(
     Card(
         modifier = Modifier.padding(24.dp).fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -446,7 +446,7 @@ fun SkinConcernsCardTablet(
     Card(
         modifier = Modifier.padding(24.dp).fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
