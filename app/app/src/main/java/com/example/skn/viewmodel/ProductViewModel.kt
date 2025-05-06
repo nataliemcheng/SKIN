@@ -293,7 +293,6 @@ class ProductViewModel : ViewModel() {
                 Log.d("Search", "Found ${distinctResults.size} results for query: $query")
 
                 _products.value = distinctResults
-                _recentlySearched.value = (_recentlySearched.value + distinctResults).distinctBy { it.id }.takeLast(10)
 
                 _error.value = if (distinctResults.isEmpty()) "No products found for '$query'" else null
 
